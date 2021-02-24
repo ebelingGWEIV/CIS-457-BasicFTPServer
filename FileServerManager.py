@@ -1,7 +1,8 @@
 import socket
-import threading
 import concurrent.futures
 import time
+import os
+import FileList
 
 
 class FileServer(object):
@@ -43,8 +44,11 @@ class FileServer(object):
             print("got connected")
             pass
         elif command[0].lower() == "list":
-            time.sleep(5)
             print("got list")
+            files = os.listdir("../FileServer")
+            for f in files:
+                print(f)
+
             pass
         elif command[0].lower() == "retr":
             print("got retr")
@@ -53,8 +57,8 @@ class FileServer(object):
             print("got stor")
             pass
         elif command[0].lower() == "quit":
+
             self.__del__()
-            print("got quit")
             pass
         pass
 

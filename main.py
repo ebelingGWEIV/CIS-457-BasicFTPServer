@@ -1,5 +1,5 @@
 import Client
-import FileServer
+import FileServerManager
 import _thread
 import time
 
@@ -11,7 +11,7 @@ def StartClient():
 
 
 def StartServer():
-    myServer = FileServer.FileServer("127.0.0.1", 1609)
+    myServer = FileServerManager.FileServer("127.0.0.1", 1609)
     myServer.listenForCommands(2048)
     return myServer
 

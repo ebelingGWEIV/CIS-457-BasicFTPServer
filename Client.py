@@ -14,6 +14,7 @@ class Client(object):
     def createCommandConnection(self):
         self.controlSocket.send(("CONNECT 127.0.0.1 5612$").encode('ascii'))  # Sends port name
         time.sleep(2)
+        print("asking for list")
         self.controlSocket.send(("list$").encode('ascii'))
 
     def __del__(self):

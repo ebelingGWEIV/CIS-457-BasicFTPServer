@@ -1,17 +1,18 @@
 import Client
 import FileServerManager
 import _thread
+import io
 import time
 
 
 def StartClient():
-    myClient = Client.Client("127.0.0.1", 1609)
+    myClient = Client.Client("127.0.0.1", 1602)
     myClient.createCommandConnection()
     return myClient
 
 
 def StartServer():
-    myServer = FileServerManager.FileServer("127.0.0.1", 1609)
+    myServer = FileServerManager.FileServer("127.0.0.1", 1602)
     myServer.listenForCommands(2048)
     return myServer
 
@@ -20,5 +21,7 @@ def StartServer():
 if __name__ == '__main__':
     _thread.start_new_thread(StartServer, ())
     _thread.start_new_thread(StartClient, ())
-    while 1:
-        pass
+    go = 1
+    while go == 1:
+        go = int(input())
+    _thread.exit()

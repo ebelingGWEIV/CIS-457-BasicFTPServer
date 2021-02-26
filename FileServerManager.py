@@ -45,8 +45,8 @@ class FileServer(object):
             pass
         elif command[0].lower() == "list":
             print("got list")
-            files = [f for f in os.listdir('.') if os.path.isfile(f)]
-            for f in files:
+            arr = os.listdir('./FileServer')
+            for f in arr:
                 print(f)
             pass
         elif command[0].lower() == "retr":

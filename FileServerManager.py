@@ -1,8 +1,6 @@
 import socket
+import ServerControlSocket
 import concurrent.futures
-import time
-import os
-import FileList
 
 
 class FileServer(object):
@@ -12,55 +10,25 @@ class FileServer(object):
     def __init__(self, server, controlPort):
         self.Run = True
         self.serverIP = server
-        self.controlSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.controlSocket.bind((server, controlPort))
+        self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.serverSocket.bind((server, controlPort))
         print("created server")
-        self.controlSocket.listen()
-        print("waiting for connection")
-        self.connection_socket, addr = self.controlSocket.accept()
 
+    def ListenForConnections(self, buffer_size, max_workers=10):
+        self.serverSocket.listen() #start allowing connections to the server
+        print("waiting for connections")
 
-    def listenForCommands(self, buffer_size, max_workers=10):
-        while self.Run:
-            message = self.connection_socket.recv(buffer_size).decode('ascii')
-            if message.endswith('$'):
-                with concurrent.futures.ThreadPoolExecutor(max_workers) as executor:
-                    executor.submit(self.parseCommand, message[:len(message)-1])
-                message = ''
+        connection_socket, addr = self.serverSocket.accept()
+        print("got a connection from: " + addr)
+        connectionInfo = (connection_socket, addr)
+        with concurrent.futures.ThreadPoolExecutor(max_workers) as executor:
+            executor.submit(ServerControlSocket.Controller, connectionInfo)
 
     def stopControlServer(self):
-        self.Run = False
+        self.__del__(self)
 
-    def parseCommand(self, controlCmd):
-        command = str(controlCmd).split(' ')
-        self.onCommand(command)
 
-        #this is where the thread should termiante itself
-
-    #Perform one of the four commands
-    def onCommand(self, command):
-        if command[0].lower() == 'connect':
-            time.sleep(2)
-            print("got connected")
-            pass
-        elif command[0].lower() == "list":
-            print("got list")
-            arr = os.listdir('./FileServer')
-            for f in arr:
-                print(f)
-            pass
-        elif command[0].lower() == "retr":
-            print("got retr")
-            pass
-        elif command[0].lower() == "stor":
-            print("got stor")
-            pass
-        elif command[0].lower() == "quit":
-
-            self.__del__()
-            pass
-        pass
 
     def __del__(self):
-        self.controlSocket.close()
+        self.serverSocket.close()
         concurrent.futures.ThreadPoolExecutor.shutdown()

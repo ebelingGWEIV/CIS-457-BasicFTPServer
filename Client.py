@@ -1,37 +1,49 @@
 import socket
+import _thread
 import time
 
-class Client(object):
+class Client():
     """
     @param server IP of the Data connection
     """
-    def __init__(self, server, port):
-        self.fileServerIP = server
-        self.initialSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.initialSocket.connect((server, port))
+    def __init__(self):
         self.commandConnected = False
+
+    """
+    @summary Connects the client to the default port on the server
+    @param server
+    @param port
+    """
+    def Create(self, server, port = 1609):
+        Client.fileServerIP = server
+        self.welcomeSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.welcomeSocket.connect((server, port))
         print("created client")
 
 
-    def createCommandConnection(self, server, port = 1609):
-        self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.serverSocket.bind((server, port))
-        self.serverSocket.listen()
-        self.initialSocket.send(("CONNECT " + server + " " + port + "$").encode('ascii'))  # Sends port name
-        self.command_connection, addr = self.server_socket.accept()
+    def getCommandConnection(self, server, port):
+        self.welcomeSocket.send(("CONNECT " + server + " " + str(port) + "$").encode('ascii'))
+        time.sleep(1) #need some delay, the server wasn't able to work quick enough
+        # self.initialSocket.send(("CONNECT " + server + " " + str(port) + "$").encode('ascii'))  # Sends port name
+        self.controlSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.controlSocket.connect((server, port))
+        print("accepted server connection to control socket")
         self.commandConnected = True
 
     def sendCommand(self, command):
         if(self.commandConnected == False):
             print("must be connected first. Connecting using default settings")
-            self.createCommandConnection(self.fileServerIP)
-        self.command_connection.send(command)
+            self.getCommandConnection(self.fileServerIP)
+        print("sending " + command)
+        command = command + "$s"
+        self.controlSocket.send(str(command).encode('ascii'))
 
     def RetreiveFile(self, filename):
         self.sendCommand("RETR " + filename)
         #todo implement file receving
 
     def StoreFile(self, filename):
+
         self.sendCommand("STOR " + filename)
         #todo implement file sending
 
@@ -39,8 +51,11 @@ class Client(object):
         self.sendCommand("LIST")
 
     def Quit(self):
-        self.sendCommand("quit")
-        self.__del__(self)
+        if(self.commandConnected == True):
+            self.sendCommand("quit")
+        self.__del__()
 
     def __del__(self):
-        self.initialSocket.close()
+        self.welcomeSocket.close()
+        if(self.commandConnected == True):
+            self.controlSocket.close()

@@ -14,18 +14,16 @@ class Controller():
     def StartControlServer(self):
         while(self.connected == False):
             message = self.welcomeConn.recv(4096).decode('ascii')  # we assume that
-            print("server got " + str(message))
             self.HandleMessage(message)
 
     def listenForCommands(self):
         while self.Run:
-            print("server waiting for message")
             message = self.controlConnection.recv(4096).decode('ascii') #we assume that
-            print("server got " + str(message))
             self.HandleMessage(message)
 
     def HandleMessage(self, message, max_workers=10):
         if message.endswith('$'):
+            print("server got " + message)
             with concurrent.futures.ThreadPoolExecutor(max_workers) as executor:
                 executor.submit(self.onCommand, message[:len(message) - 1])
             message = ''

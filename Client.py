@@ -35,7 +35,7 @@ class Client():
             print("must be connected first. Connecting using default settings")
             self.getCommandConnection(self.fileServerIP)
         print("sending " + command)
-        command = command + "$s"
+        command = command + "$"
         self.controlSocket.send(str(command).encode('ascii'))
 
     def RetreiveFile(self, filename):

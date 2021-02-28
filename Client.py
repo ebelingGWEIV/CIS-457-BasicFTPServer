@@ -84,7 +84,6 @@ class Client():
     """
     def ListFiles(self):
         self.sendCommand("LIST " + str(self.dataPort))
-        self.CreateDataSocketServer()
         files = bytes(self.GetData()).decode('ascii')
         print("Files stored on server are: ")
         print(files)

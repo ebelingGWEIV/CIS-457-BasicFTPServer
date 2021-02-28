@@ -142,7 +142,6 @@ class Controller():
         self.dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.dataSocket.bind((str(ip), int(dataPort)))
         self.dataSocket.listen()
-        self.dataSeverOpen = True
         self.dataConnection, addr = self.dataSocket.accept()
         self.dataConnectionOpen = True
 
@@ -170,6 +169,7 @@ class Controller():
         if(self.dataConnectionOpen == True):
             self.dataConnection.close()
             self.dataConnectionOpen = False
+            self.dataSocket.close()
 
     """
     " @summary

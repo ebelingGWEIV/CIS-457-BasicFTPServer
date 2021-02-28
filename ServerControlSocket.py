@@ -52,7 +52,7 @@ class Controller():
             print("got stor")
             pass
         elif command[0].lower() == "quit":
-            self.Quit(self)
+            self.Quit()
         pass
 
     def Quit(self):

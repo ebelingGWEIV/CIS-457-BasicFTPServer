@@ -18,16 +18,14 @@ class Client():
         Client.fileServerIP = server
         self.welcomeSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.welcomeSocket.connect((server, port))
-        print("created client")
+        self.dataPort = ((port + 1111) % 65535) + 1
 
 
     def getCommandConnection(self, server, port):
-        self.welcomeSocket.send(("CONNECT " + server + " " + str(port) + "$").encode('ascii'))
-        time.sleep(1) #need some delay, the server wasn't able to work quick enough
-        # self.initialSocket.send(("CONNECT " + server + " " + str(port) + "$").encode('ascii'))  # Sends port name
+        self.welcomeSocket.send(("CONNECT " + server + " " + str(port) + '$').encode('ascii'))
+        time.sleep(1)
         self.controlSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.controlSocket.connect((server, port))
-        print("accepted server connection to control socket")
         self.commandConnected = True
 
     def sendCommand(self, command):
@@ -35,20 +33,20 @@ class Client():
             print("must be connected first. Connecting using default settings")
             self.getCommandConnection(self.fileServerIP)
         print("sending " + command)
-        command = command + "$"
+        command = command + '$'
         self.controlSocket.send(str(command).encode('ascii'))
 
     def RetreiveFile(self, filename):
-        self.sendCommand("RETR " + filename)
+        self.sendCommand("RETR " + filename + " " + self.dataPort)
         #todo implement file receving
 
     def StoreFile(self, filename):
 
-        self.sendCommand("STOR " + filename)
+        self.sendCommand("STOR " + filename + " " + self.dataPort)
         #todo implement file sending
 
     def ListFiles(self):
-        self.sendCommand("LIST")
+        self.sendCommand("LIST " + self.dataPort)
 
     def Quit(self):
         if(self.commandConnected == True):

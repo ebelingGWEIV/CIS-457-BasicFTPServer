@@ -20,7 +20,6 @@ class FileServer(object):
         self.serverIP = server
         self.welcomeSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.welcomeSocket.bind((server, controlPort))
-        print("created server")
 
     """
     @summary Listen for and handle connections from clients

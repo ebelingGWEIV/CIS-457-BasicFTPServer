@@ -41,7 +41,7 @@ class Controller():
             self.List(command[1])
             pass
         elif command[0].lower() == "retr":
-            print("got retr")
+            self.Retreive(command[1], command[2])
             pass
         elif command[0].lower() == "stor":
             print("got stor")
@@ -61,14 +61,27 @@ class Controller():
         arr = os.listdir('./FileServer')
         message = ""
         for file in arr:
-            message = message + "\n" + file
-        self.SendData(message, dataPort)
+            message = message + file + '\n'
+        self.SendData((message).encode('ascii'), dataPort)
+
+    def Retreive(self, filename, dataPort):
+        file = open('./FileServer/'+filename, 'rb')
+        newChar = file.read(1)
+        data = bytes(''.encode('ascii'))
+        while newChar:
+            data = data + newChar
+            newChar = file.read(1)
+            if not newChar:
+                break
+        self.SendData(data, dataPort)
+        file.close()
+        pass
 
     def SendData(self, message, dataPort):
         time.sleep(1) #to ensure connection happens
         dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         dataSocket.connect((self.clientAddr[0], int(dataPort)))
-        dataSocket.send(str(message).encode('ascii'))
+        dataSocket.send(message)
         dataSocket.close() #sends an EOF
 
     def Quit(self):
@@ -79,5 +92,4 @@ class Controller():
 
     def __del__(self):
         self.Quit()
-
         # concurrent.futures.ThreadPoolExecutor.shutdown()

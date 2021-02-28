@@ -14,6 +14,7 @@ def StartServer(myServer):
 
 
 # Press the green button in the gutter to run the script.
+#todo Add timeouts of 10ms to every socket
 if __name__ == '__main__':
     msg = ""
     port = 1622
@@ -38,8 +39,10 @@ if __name__ == '__main__':
             # myClient.createCommandConnection(command[1], command[2])
     # elif command[0].lower() == "quit":
     time.sleep(1)
-    myClient.ListFiles()
+    myClient.RetreiveFile("test.txt")
+    # myClient.ListFiles()
     time.sleep(1)
+
     myClient.Quit()
 
 

@@ -1,6 +1,7 @@
 import socket
 import concurrent.futures
 import os
+import time
 
 class Controller():
     def __init__(self, connectionInfo):
@@ -34,16 +35,10 @@ class Controller():
     def onCommand(self, message):
         command = str(message).split()
         if command[0].lower() == 'connect' and self.connected == False:
-            self.controlServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.controlServer.bind((command[1], int(command[2])))
-            self.controlServer.listen()
-            self.controlConnection, addr = self.controlServer.accept()
-            self.connected = True
+            self.Connect(command)
             pass
         elif command[0].lower() == "list":
-            arr = os.listdir('./FileServer')
-            for f in arr:
-                print(f)
+            self.List(command[1])
             pass
         elif command[0].lower() == "retr":
             print("got retr")
@@ -54,6 +49,27 @@ class Controller():
         elif command[0].lower() == "quit":
             self.Quit()
         pass
+
+    def Connect(self, command):
+        self.controlServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.controlServer.bind((command[1], int(command[2])))
+        self.controlServer.listen()
+        self.controlConnection, self.clientAddr = self.controlServer.accept()
+        self.connected = True
+
+    def List(self, dataPort):
+        arr = os.listdir('./FileServer')
+        message = ""
+        for file in arr:
+            message = message + "\n" + file
+        self.SendData(message, dataPort)
+
+    def SendData(self, message, dataPort):
+        time.sleep(1) #to ensure connection happens
+        dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        dataSocket.connect((self.clientAddr[0], int(dataPort)))
+        dataSocket.send(str(message).encode('ascii'))
+        dataSocket.close() #sends an EOF
 
     def Quit(self):
         self.connected = False

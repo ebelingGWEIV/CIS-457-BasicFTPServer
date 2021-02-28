@@ -52,12 +52,16 @@ class Controller():
             print("got stor")
             pass
         elif command[0].lower() == "quit":
-            self.__del__(self)
+            self.Quit(self)
         pass
 
-    def __del__(self):
-        if(self.connected == True): self.controlConnection.close()
+    def Quit(self):
         self.connected = False
         self.Run = False
+        if(self.connected == True): self.controlConnection.close()
+
+
+    def __del__(self):
+        self.Quit()
 
         # concurrent.futures.ThreadPoolExecutor.shutdown()

@@ -13,29 +13,17 @@ class Client():
         self.welcomeConnected = False
 
     """
-    " @summary Connects the client to the default port on the server
-    " @param server
-    " @param port
-    """
-    def Create(self, server, port = 1609, timeout = 50.0):
-        self.fileServerIP = server
-        self.welcomeSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.welcomeSocket.settimeout(timeout)
-        self.welcomeSocket.connect((server, port))
-        self.welcomeConnected = True
-        self.timeout = timeout
-        self.dataPort = ((port + 1111) % 65535) + 1
-
-    """
     " @summary
     " @param
     " @param
     """
-    def getCommandConnection(self, server, port):
-        self.welcomeSocket.send(("CONNECT " + server + " " + str(port) + '$').encode('ascii'))
-        time.sleep(1)
+    def getCommandConnection(self, server, port = 1609, timeout = 50.0):
+        self.fileServerIP = server
+        self.timeout = timeout
+        self.dataPort = ((int(port) + 1111) % 65535) + 1
         self.controlSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.controlSocket.connect((server, port))
+        self.controlSocket.settimeout(timeout)
+        self.controlSocket.connect((server, int(port)))
         self.commandConnected = True
 
     """
@@ -77,7 +65,6 @@ class Client():
                 break
         self.ConnectAndSendData(self.fileServerIP, data)
         file.close()
-        #todo implement file sending
 
     """
     " @summary Print a list of the files stored on the file server
@@ -148,8 +135,6 @@ class Client():
     " @summary
     """
     def __del__(self):
-        if(self.welcomeConnected == True):
-            self.welcomeSocket.close()
         if(self.commandConnected == True):
             self.controlSocket.close()
         self.CloseDataConnection()

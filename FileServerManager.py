@@ -7,8 +7,9 @@ class FileServer(object):
     """
     @param server IP of the Command connection
     """
-    def __init__(self):
+    def __init__(self, server, port):
         self.Run = False
+        self.Create(server, port)
 
     """
     @summary Bind server to IP and port number. Does not begin accepting client connections
@@ -38,7 +39,7 @@ class FileServer(object):
                 executor.submit(ServerControlSocket.Controller, connectionInfo)
 
     def stopControlServer(self):
-        self.__del__(self)
+        self.__del__()
 
     def __del__(self):
         self.welcomeSocket.close()

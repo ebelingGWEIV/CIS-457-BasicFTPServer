@@ -14,27 +14,17 @@ class Controller():
         self.welcomeConn = connectionInfo[0]
         # myClient = connectionInfo[1]
         self.ip = connectionInfo[1][0]
-        self.connected = False
         self.Run = True
         self.dataConnectionOpen = False
         self.dataSeverOpen = False
         self.StartControlServer()
-        self.listenForCommands()
 
     """
     " @summary
     """
     def StartControlServer(self):
-        while(self.connected == False):
+        while(self.Run == True):
             message = self.welcomeConn.recv(Controller.buffer_size).decode('ascii')  # we assume that
-            self.HandleMessage(message)
-
-    """
-    " @summary
-    """
-    def listenForCommands(self):
-        while self.Run:
-            message = self.controlConnection.recv(Controller.buffer_size).decode('ascii') #we assume that
             self.HandleMessage(message)
 
     """
@@ -56,10 +46,7 @@ class Controller():
     """
     def onCommand(self, message):
         command = str(message).split()
-        if command[0].lower() == 'connect' and self.connected == False:
-            self.Connect(command)
-            pass
-        elif command[0].lower() == "list":
+        if command[0].lower() == "list":
             self.List(command[1])
             pass
         elif command[0].lower() == "retr":
@@ -72,16 +59,6 @@ class Controller():
             self.Quit()
         pass
 
-    """
-    " @summary
-    " @param
-    """
-    def Connect(self, command):
-        self.controlServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.controlServer.bind((command[1], int(command[2])))
-        self.controlServer.listen()
-        self.controlConnection, self.clientAddr = self.controlServer.accept()
-        self.connected = True
 
     """
     " @summary
@@ -130,7 +107,7 @@ class Controller():
     def SendData(self, message, dataPort):
         time.sleep(1) #to ensure connection happens
         dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        dataSocket.connect((self.clientAddr[0], int(dataPort)))
+        dataSocket.connect((self.ip, int(dataPort)))
         dataSocket.send(message)
         dataSocket.close() #sends an EOF
 
@@ -175,9 +152,7 @@ class Controller():
     " @summary
     """
     def Quit(self):
-        self.connected = False
         self.Run = False
-        if(self.connected == True): self.controlConnection.close()
 
     """
     " @summary

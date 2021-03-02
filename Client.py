@@ -1,15 +1,15 @@
 import socket
 import time
 import os
-import random
 
 class Client():
-    buffer_size = 4096
+    buffer_size = 4096 #I put this here on accident, but it made me realized that classes can have properties. Now I wish it wasn't nearly done with the project, because there are things I would change.
     """
     @param server IP of the Data connection
     """
     def __init__(self, ip):
-        #These are probably all things that should be client properties
+        # These are probably all things that should be Client properties, but it's too late now. This is my first python
+        # project, so I had a lot to learn.
         self.ip = ip
         self.commandConnected = False
         self.dataConnectionOpen = False
@@ -26,6 +26,10 @@ class Client():
     " @param timeout Set the timeout for the client's connections
     """
     def connectToServer(self, server, port = 1609, timeout = 50.0):
+        if(self.commandConnected == True):
+            print("Cannot connect to more than one server")
+            return
+
         self.timeout = timeout
         self.fileServerIP = server
         welcomeSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -38,8 +42,11 @@ class Client():
 
         if(message[0].lower() == str('connect')):
             self.createControlConnection(message[1])
-        else:
-            print("Could not connect to server")
+            if self.commandConnected:
+                print("Connected to server")
+                return
+
+        print("Could not connect to server")
 
     """
     " @summary Connect the control socket to the file server
@@ -60,7 +67,6 @@ class Client():
         if(self.commandConnected == False):
             print("Control connection must be established first")
             return
-        command = command + '$'
         self.controlSocket.send(str(command).encode('ascii'))
 
     """
@@ -81,16 +87,20 @@ class Client():
     """
     def StoreFile(self, filename):
         self.sendCommand("STOR " + filename + " " + str(self.dataPort))
-        file = open('./LocalStorage/' + filename, 'rb')
-        newChar = file.read(1)
-        data = bytes(''.encode('ascii'))
-        while newChar:
-            data = data + newChar
-            newChar = file.read(Client.buffer_size)
-            if not newChar:
-                break
-        self.ConnectAndSendData(self.fileServerIP, data)
-        file.close()
+        try:
+            file = open('./LocalStorage/' + filename, 'rb')
+            newChar = file.read(1)
+            data = bytes(''.encode('ascii'))
+            while newChar:
+                data = data + newChar
+                newChar = file.read(Client.buffer_size)
+                if not newChar:
+                    break
+            self.ConnectAndSendData(self.fileServerIP, data)
+            file.close()
+        except:
+            print("Error occurred while sending file to server")
+
 
     """
     " @summary Print a list of the files stored on the file server
@@ -142,11 +152,14 @@ class Client():
     " @param All of the data that should be sent
     """
     def ConnectAndSendData(self, server, message):
-        time.sleep(1)  # to ensure connection happens
+        time.sleep(1)  # to ensure connection happens #todo add a timeout
         dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        dataSocket.connect((server, int(self.dataPort)))
-        dataSocket.send(message) #Assummes that the data is less than the max size
-        dataSocket.close()  # sends an EOF
+        try:
+            dataSocket.connect((server, int(self.dataPort)))
+            dataSocket.send(message) #Assummes that the data is less than the max size
+        except:
+            dataSocket.close()  # sends an EOF
+            print("Error occurred while sending data to the server")
 
     """
     " @summary Close the data socket

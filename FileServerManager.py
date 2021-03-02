@@ -73,7 +73,7 @@ class FileServer(object):
 
         myControlSocket = ServerControlSocket.Controller(connectionInfo) # init the control server
         self.RunningControlSockets.append(myControlSocket) # add it to the list of running servers
-        myControlSocket.StartControlServer() # start the control server
+        myControlSocket.RunControlServer() # start the control server
 
     def stopControlServer(self):
         self.Run = False

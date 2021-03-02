@@ -17,7 +17,7 @@ if __name__ == '__main__':
     myClient = Client.Client(server)
 
     _thread.start_new_thread(StartServer, (myServer, ))
-    while msg != "quit all":
+    while True:
         msg = str(input("enter a command"))
         command = msg.split()
         if command[0].lower() == "connect":

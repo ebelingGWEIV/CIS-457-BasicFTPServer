@@ -13,9 +13,10 @@ class Client():
         self.welcomeConnected = False
 
     """
-    " @summary
-    " @param
-    " @param
+    " @summary Connect to the file server
+    " @param server IP of the file server
+    " @param port Port for control connection on the file server
+    " @param timeout Set the timeout for the client's connections
     """
     def getCommandConnection(self, server, port = 1609, timeout = 50.0):
         self.fileServerIP = server
@@ -27,8 +28,8 @@ class Client():
         self.commandConnected = True
 
     """
-    " @summary
-    " @param
+    " @summary Send commands to the file server through TCP
+    " @param command for the server
     """
     def sendCommand(self, command):
         if(self.commandConnected == False):
@@ -50,8 +51,8 @@ class Client():
         file.close()
 
     """
-    " @summary
-    " @param
+    " @summary Run the store file command. Loads a file from disk as bytes and sends it to the file server over a new data connection.
+    " @param name of the file in ./LocalStorage
     """
     def StoreFile(self, filename):
         self.sendCommand("STOR " + filename + " " + str(self.dataPort))
@@ -95,8 +96,8 @@ class Client():
         self.dataConnectionOpen = True
 
     """
-    " @summary
-    " @param 
+    " @summary Creates the data socket as the server and waits until an EOF is received
+    " @param buf_size The number of bytes to receive at one time
     """
     def GetData(self, buf_size = buffer_size):
         self.CreateDataSocketServer() #Make a new datasocket
@@ -123,7 +124,7 @@ class Client():
         dataSocket.close()  # sends an EOF
 
     """
-    " @summary
+    " @summary Close the data socket
     """
     def CloseDataConnection(self):
         if(self.dataConnectionOpen == True):
@@ -132,7 +133,7 @@ class Client():
             self.dataSocket.close()
 
     """
-    " @summary
+    " @summary Close the control and data sockets.
     """
     def __del__(self):
         if(self.commandConnected == True):

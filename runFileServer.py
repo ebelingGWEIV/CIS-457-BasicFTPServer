@@ -8,7 +8,6 @@ def signal_handler(sig, frame):
 
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGINT, signal_handler) #allows for safe closing of the server
+    signal.signal(signal.SIGINT, signal_handler) # I thought this was necessary for clean closing of the server
     myServer = FileServerManager.FileServer("localhost", 1609)
-    myServer.ListenForConnections()
 

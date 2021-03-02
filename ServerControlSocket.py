@@ -11,21 +11,25 @@ class Controller():
     " @param
     """
     def __init__(self, connectionInfo, timeout = 50.0):
-        self.welcomeConn = connectionInfo[0]
+        self.controlCon = connectionInfo[0]
         # myClient = connectionInfo[1]
         self.ip = connectionInfo[1][0]
+        self.myPort = connectionInfo[1][1]
         self.Run = True
         self.dataConnectionOpen = False
         self.dataSeverOpen = False
-        self.StartControlServer()
 
     """
     " @summary
     """
     def StartControlServer(self):
         while(self.Run == True):
-            message = self.welcomeConn.recv(Controller.buffer_size).decode('ascii')  # we assume that
-            self.HandleMessage(message)
+            try:
+                message = self.controlCon.recv(Controller.buffer_size).decode('ascii')  # we assume that
+                self.HandleMessage(message)
+            except ConnectionResetError as ex:
+                print("Server on port " + str(self.myPort) + " is closing")
+                self.Quit()
 
     """
     " @summary
@@ -90,7 +94,7 @@ class Controller():
         pass
 
     """
-    "
+    " 
     """
     def StoreFile(self, filename, dataPort):
         bytes = self.GetData(dataPort)
@@ -153,6 +157,7 @@ class Controller():
     """
     def Quit(self):
         self.Run = False
+        self.CloseDataConnection()
 
     """
     " @summary

@@ -1,6 +1,7 @@
 import socket
 import time
 import os
+import random
 
 class Client():
     buffer_size = 4096
@@ -8,27 +9,47 @@ class Client():
     @param server IP of the Data connection
     """
     def __init__(self, ip):
+        #These are probably all things that should be client properties
         self.ip = ip
         self.commandConnected = False
         self.dataConnectionOpen = False
         self.welcomeConnected = False
+        self.dataPort = 0
         if not os.path.isdir("./LocalStorage"):
             print("Creating LocalStorage directory")
             os.mkdir("./LocalStorage")
 
     """
-    " @summary Connect to the file server
+    " Connect to the server and wait for a message with the new port to connect the control socket to.
     " @param server IP of the file server
     " @param port Port for control connection on the file server
     " @param timeout Set the timeout for the client's connections
     """
-    def getCommandConnection(self, server, port = 1609, timeout = 50.0):
-        self.fileServerIP = server
+    def connectToServer(self, server, port = 1609, timeout = 50.0):
         self.timeout = timeout
-        self.dataPort = ((int(port) + 1111) % 65535) + 1
+        self.fileServerIP = server
+        welcomeSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        welcomeSocket.settimeout(self.timeout)
+        welcomeSocket.connect((self.fileServerIP, int(port)))
+
+        data = welcomeSocket.recv(Client.buffer_size).decode('ascii')
+        message = data.split()
+        welcomeSocket.close()
+
+        if(message[0].lower() == str('connect')):
+            self.createControlConnection(message[1])
+        else:
+            print("Could not connect to server")
+
+    """
+    " @summary Connect the control socket to the file server
+    " @param port Port for control connection on the file server
+    """
+    def createControlConnection(self, port):
+        self.dataPort = ((int(port) + 1) % 65535)
         self.controlSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.controlSocket.settimeout(timeout)
-        self.controlSocket.connect((server, int(port)))
+        self.controlSocket.settimeout(self.timeout)
+        self.controlSocket.connect((self.fileServerIP, int(port)))
         self.commandConnected = True
 
     """
@@ -48,7 +69,7 @@ class Client():
     """
     def RetreiveFile(self, filename):
         self.sendCommand("RETR " + filename + " " + str(self.dataPort))
-        bytes = self.GetData()
+        bytes = self.GetData(self.dataPort)
         print("got file")
         file = open('./LocalStorage/'+filename, 'wb')
         file.write(bytes)
@@ -76,7 +97,7 @@ class Client():
     """
     def ListFiles(self):
         self.sendCommand("LIST " + str(self.dataPort))
-        files = bytes(self.GetData()).decode('ascii')
+        files = bytes(self.GetData(self.dataPort)).decode('ascii')
         print("Files stored on server are: ")
         print(files)
         self.CloseDataConnection()

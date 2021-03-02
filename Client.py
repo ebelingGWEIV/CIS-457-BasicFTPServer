@@ -1,5 +1,6 @@
 import socket
 import time
+import os
 
 class Client():
     buffer_size = 4096
@@ -11,6 +12,9 @@ class Client():
         self.commandConnected = False
         self.dataConnectionOpen = False
         self.welcomeConnected = False
+        if not os.path.isdir("./LocalStorage"):
+            print("Creating LocalStorage directory")
+            os.mkdir("./LocalStorage")
 
     """
     " @summary Connect to the file server

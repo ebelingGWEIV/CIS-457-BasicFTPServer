@@ -1,6 +1,7 @@
 import socket
 import ServerControlSocket
 import concurrent.futures
+import os
 
 
 class FileServer(object):
@@ -9,7 +10,15 @@ class FileServer(object):
     """
     def __init__(self, server, port):
         self.Run = False
-        self.Create(server, port)
+        try:
+            self.Create(server, port)
+            if not os.path.isdir("./FileServer"):
+                print("Creating FileServer directory")
+                os.mkdir("./FileServer")
+        except:
+            print("Failed to start file server")
+            self.__del__()
+
 
     """
     @summary Bind server to IP and port number. Does not begin accepting client connections
@@ -31,16 +40,20 @@ class FileServer(object):
 
         self.welcomeSocket.listen() #start allowing connections to the server
         while self.Run == True:
-            print("waiting for connections")
+            # print("waiting for connections")
             connection_socket, addr = self.welcomeSocket.accept()
-            print("got a connection")
+            # print("got a connection")
             connectionInfo = (connection_socket, addr)
             with concurrent.futures.ThreadPoolExecutor(max_workers) as executor:
                 executor.submit(ServerControlSocket.Controller, connectionInfo)
 
     def stopControlServer(self):
+        self.Run = False
         self.__del__()
 
     def __del__(self):
         self.welcomeSocket.close()
-        concurrent.futures.ThreadPoolExecutor.shutdown()
+        try:
+            concurrent.futures.ThreadPoolExecutor.shutdown()
+        except: #An exception would occur if there are
+            print("No server connections running on shutdown")

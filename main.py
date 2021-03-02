@@ -1,7 +1,6 @@
 import Client
 import FileServerManager
 import _thread
-import time
 
 def StartServer(myServer):
     myServer.ListenForConnections()
@@ -13,10 +12,10 @@ if __name__ == '__main__':
     port = 1609
     server = "localhost"
 
-    myServer = FileServerManager.FileServer(server, port)
+    # myServer = FileServerManager.FileServer(server, port)
     myClient = Client.Client(server)
 
-    _thread.start_new_thread(StartServer, (myServer, ))
+    # _thread.start_new_thread(StartServer, (myServer, ))
     while True:
         msg = str(input("enter a command"))
         command = msg.split()

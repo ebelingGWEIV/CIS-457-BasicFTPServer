@@ -125,6 +125,7 @@ class Client():
     """
     def CreateDataSocketServer(self):
         self.dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.dataSocket.settimeout(self.timeout)
         self.dataSocket.bind((str(self.ip), int(self.dataPort)))
         self.dataSocket.listen()
         self.dataConnection, addr = self.dataSocket.accept()
@@ -152,14 +153,16 @@ class Client():
     " @param All of the data that should be sent
     """
     def ConnectAndSendData(self, server, message):
-        time.sleep(1)  # to ensure connection happens #todo add a timeout
-        dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.dataSocket.settimeout(self.timeout)
         try:
-            dataSocket.connect((server, int(self.dataPort)))
-            dataSocket.send(message) #Assummes that the data is less than the max size
+            self.dataSocket.connect((server, int(self.dataPort)))
+            self.dataConnectionOpen = True
+            self.dataSocket.send(message) #Assummes that the data is less than the max size
         except:
-            dataSocket.close()  # sends an EOF
             print("Error occurred while sending data to the server")
+        finally:
+            self.CloseDataConnection()
 
     """
     " @summary Close the data socket

@@ -4,7 +4,7 @@ import sys
 
 def signal_handler(sig, frame):
     print("Closing the server")
-    myServer.stopControlServer()
+    myServer.closeControlServer()
 
 
 if __name__ == '__main__':

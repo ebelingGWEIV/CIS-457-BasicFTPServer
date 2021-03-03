@@ -16,6 +16,7 @@ class Controller():
         self.ip = connectionInfo[1][0]
         self.myPort = connectionInfo[1][1]
         self.myIP = myIp
+        self.timeout = timeout
         self.Run = True
         self.dataConnectionOpen = False
         self.dataSeverOpen = False
@@ -23,7 +24,7 @@ class Controller():
     """
     " @summary Receive messages from the client and send them to the message handler on a separate thread.
     """
-    def RunControlServer(self, max_workers = 10):
+    def RunControlServer(self):
         while(self.Run == True):
             try:
                 message = self.controlCon.recv(Controller.buffer_size).decode('ascii')  # we assume that
@@ -105,8 +106,9 @@ class Controller():
     " @param dataPort The port to send data over
     """
     def SendData(self, message, dataPort):
-        time.sleep(1) #to ensure the client is listening
+        # time.sleep(1) #to ensure the client is listening
         dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        dataSocket.settimeout(self.timeout)
         dataSocket.connect((self.ip, int(dataPort)))
         dataSocket.send(message)
         dataSocket.close() #sends an EOF

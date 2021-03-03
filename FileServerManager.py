@@ -1,6 +1,5 @@
 import socket
 import _thread
-import concurrent.futures
 import os
 import random
 
@@ -8,6 +7,7 @@ import ServerControlSocket
 
 
 class FileServer(object):
+    timeout = 50.0
     """
     @param server IP of the Command connection
     """
@@ -16,9 +16,11 @@ class FileServer(object):
         self.connectedPorts = []
         self.RunningControlSockets = []
         try:
+            # The file server needs a directory to manage
             if not os.path.isdir("./FileServer"):
                 print("Creating FileServer directory")
                 os.mkdir("./FileServer")
+            # Create and listen to the welcome socket the server will use
             welcomeSocket = self.Create(server, port)
             self.ListenForConnections(welcomeSocket)
         except:
@@ -51,8 +53,7 @@ class FileServer(object):
             print("waiting for connections")
             connection_socket, addr = listening_socket.accept()
             print("got a connection")
-            _thread.start_new_thread(self.onWelcome, (connection_socket,))
-
+            _thread.start_new_thread(self.onWelcome, (connection_socket,)) # A new thread is made for every connection to the server
         listening_socket.close()
 
 
@@ -61,28 +62,26 @@ class FileServer(object):
         #Verify that no control or data port will be duplicated
         while((self.connectedPorts.__contains__(newPort) ) or (self.connectedPorts.__contains__((newPort + 1) % 65535))):
             newPort = random.randint(1024, 65535)
-        controlSocket = self.Create(self.serverIP, newPort)
 
+        # Tell the client what port to connect to and wait for a connection
+        controlSocket = self.Create(self.serverIP, newPort)
+        controlSocket.settimeout(FileServer.timeout)
         controlSocket.listen()
         connection_socket.send(("connect " + str(newPort)).encode('ascii'))
         newConnection, addr = controlSocket.accept()
 
-        controlSocket.close() #This is no longer needed
+        controlSocket.close() #This is no longer needed, so it can be closed
 
         connectionInfo = (newConnection, addr)
 
-        myControlSocket = ServerControlSocket.Controller(connectionInfo) # init the control server
+        myControlSocket = ServerControlSocket.Controller(connectionInfo, FileServer.timeout, self.serverIP) # init the control server
         self.RunningControlSockets.append(myControlSocket) # add it to the list of running servers
         myControlSocket.RunControlServer() # start the control server
 
-    def stopControlServer(self):
+    def closeControlServer(self):
         self.Run = False
-        self.__del__()
+        for controlSocket in self.RunningControlSockets:
+            controlSocket.Quit()
 
     def __del__(self):
-        for socket in self.RunningControlSockets:
-            socket.Quit()
-        try:
-            concurrent.futures.ThreadPoolExecutor.shutdown()
-        except: #An exception would occur if there are
-            print("No server connections running on shutdown")
+        self.closeControlServer()

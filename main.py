@@ -10,12 +10,12 @@ if __name__ == '__main__':
     port = 1609
     server = "localhost"
 
-    _thread.start_new_thread(FileServerManager.FileServer, (server, port, )) #uncomment to run the server as part of the program
+    # _thread.start_new_thread(FileServerManager.FileServer, (server, port, )) #uncomment to run the server as part of the program
 
     myClient = Client.Client(server)
 
     while True:
-        msg = str(input("enter a command"))
+        msg = str(input("enter a command: "))
         command = msg.split()
         if command[0].lower() == "connect":
             myClient.connectToServer(command[1], command[2])

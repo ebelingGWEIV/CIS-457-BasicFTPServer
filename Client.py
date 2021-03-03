@@ -1,5 +1,4 @@
 import socket
-import time
 import os
 
 class Client():
@@ -113,7 +112,7 @@ class Client():
         self.CloseDataConnection()
 
     """
-    " @summary Send a quit message to the fileserver, and close this client.
+    " @summary Send a quit message to the fileserver, and closes this client.
     """
     def Quit(self):
         if(self.commandConnected == True):

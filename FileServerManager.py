@@ -24,9 +24,8 @@ class FileServer(object):
             welcomeSocket = self.Create(server, port)
             self.ListenForConnections(welcomeSocket)
         except:
-            print("Failed to start file server")
+            print("Server is shutting down")
             self.__del__()
-
 
     """
     @summary Bind server to IP and port number. Does not begin accepting client connections

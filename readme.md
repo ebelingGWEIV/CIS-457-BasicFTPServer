@@ -3,7 +3,7 @@
 
 ### Starting the File Server
 
-- python runFileServer.py
+- python runFileServer.py < optional port number >
 
 ### Starting a client
 
@@ -11,8 +11,8 @@
 
 #### Client Commands
 
-1. CONNECT <server name/IP address> <server port>
+1. CONNECT < server name/IP address> <server port >
 2. LIST
-3. RETR <filename>
-4. STOR <filename>
+3. RETR < filename >
+4. STOR < filename >
 5. QUIT

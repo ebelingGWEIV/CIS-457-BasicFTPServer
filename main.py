@@ -3,8 +3,6 @@ import FileServerManager
 import _thread
 
 
-# Press the green button in the gutter to run the script.
-#todo Add timeouts of 10ms to every socket
 if __name__ == '__main__':
     msg = ""
     port = 1609

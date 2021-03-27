@@ -6,7 +6,7 @@ import FileRefList
 
 class Controller():
     buffer_size = 4096
-
+    FileRefs = FileRefList.FileRefs()  # The list of all files and their hosts declared as a static class property
     """
     " @summary
     " @param
@@ -21,7 +21,8 @@ class Controller():
         self.Run = True
         self.dataConnectionOpen = False
         self.dataSeverOpen = False
-        self.FileRefs = FileRefList.FileDict()# The list of all files and their hosts
+        self.MyFiles = [] # empty list for files added by this host
+
 
 
     """
@@ -47,18 +48,27 @@ class Controller():
                 self.List(command[1])
                 pass
             elif command[0].lower() == "quit":
+                Controller.FileRefs.remove(self.MyFiles)
                 self.__del__()
                 pass
             elif command[0].lower() == "add":
-                print("adding file " + command[1])
-                self.FileRefs.add(command[1], command[2], command[3])
+                description = command[1]
+                fileName = command[2]
+                hostName = command[3]
+                portNum = command[4]
+                speed = command[5]
+                fileTup = (fileName, hostName, portNum, speed)
+
+                print("adding file " + description)
+                self.MyFiles.append(description) # Add to the list of my files added
+                Controller.FileRefs.add(description, fileTup) # Add to the list of all files registered
                 pass
-            elif command[0].lower() == "get":
-                print("returning info for file " + command[1])
-                hostInfo = self.FileRefs.get(command[1])
+            elif command[0].lower() == "search":
+                print("returning info search with keyword " + command[1])
+                hostInfo = Controller.FileRefs.search(command[1])
                 if hostInfo is None:
                     hostInfo = FileRefList.HostInfo("", "")
-                self.Get(hostInfo, command[2])
+                self.Search(hostInfo, command[2])
                 pass
             else:
                 print("Command not supported")
@@ -70,7 +80,7 @@ class Controller():
     " @param hostInfo The name and data port of the host server as a HostInfo object
     " @param dataPort The port to send the host info on 
     """
-    def Get(self, hostInfo, dataPort):
+    def Search(self, hostInfo, dataPort):
         message = hostInfo.HostName + "," + hostInfo.PortNum + "\n"
         self.SendData((message).encode('ascii'), dataPort)
 
@@ -79,10 +89,10 @@ class Controller():
     " @param dataPort The name of the port to send the list over
     """
     def List(self, dataPort):
-        arr = os.listdir('./FileServer')
         message = ""
-        for file in arr:
-            message = message + file + '\n'
+        list = Controller.FileRefs.list()
+        for entry in list:
+            message = entry[0] + ", " + entry[1] + ", " + entry[2] + "\n"
         self.SendData((message).encode('ascii'), dataPort)
 
     """

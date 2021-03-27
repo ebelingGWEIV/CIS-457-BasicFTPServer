@@ -1,5 +1,5 @@
 import Client
-import FileServerManager
+import ServerManager
 import _thread
 
 

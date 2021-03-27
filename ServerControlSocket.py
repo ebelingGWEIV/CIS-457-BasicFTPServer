@@ -2,6 +2,7 @@ import socket
 import concurrent.futures
 import os
 import time
+import FileRefList
 
 class Controller():
     buffer_size = 4096
@@ -20,6 +21,8 @@ class Controller():
         self.Run = True
         self.dataConnectionOpen = False
         self.dataSeverOpen = False
+        self.FileRefs = FileRefList.FileDict()# The list of all files and their hosts
+
 
     """
     " @summary Receive messages from the client and send them to the message handler on a separate thread.
@@ -43,18 +46,33 @@ class Controller():
             if command[0].lower() == "list":
                 self.List(command[1])
                 pass
-            elif command[0].lower() == "retr":
-                self.Retreive(command[1], command[2])
-                pass
-            elif command[0].lower() == "stor":
-                self.StoreFile(command[1], command[2])
-                pass
             elif command[0].lower() == "quit":
                 self.__del__()
-            pass
+                pass
+            elif command[0].lower() == "add":
+                print("adding file " + command[1])
+                self.FileRefs.add(command[1], command[2], command[3])
+                pass
+            elif command[0].lower() == "get":
+                print("returning info for file " + command[1])
+                hostInfo = self.FileRefs.get(command[1])
+                if hostInfo is None:
+                    hostInfo = FileRefList.HostInfo("", "")
+                self.Get(hostInfo, command[2])
+                pass
+            else:
+                print("Command not supported")
         except:
             print("Client sent bad request that could not be responded to on the data port")
 
+    """
+    " @summary Send information about a host through the data port
+    " @param hostInfo The name and data port of the host server as a HostInfo object
+    " @param dataPort The port to send the host info on 
+    """
+    def Get(self, hostInfo, dataPort):
+        message = hostInfo.HostName + "," + hostInfo.PortNum + "\n"
+        self.SendData((message).encode('ascii'), dataPort)
 
     """
     " @summary Handle the client command to return a directory list of the FileServer
@@ -66,39 +84,6 @@ class Controller():
         for file in arr:
             message = message + file + '\n'
         self.SendData((message).encode('ascii'), dataPort)
-
-    """
-    " @summary Handle the client command to return a file
-    " @param filename The name of the file to send the client
-    " @param dataPort The name of the port to send the file over
-    """
-    def Retreive(self, filename, dataPort):
-        try:
-            file = open('./FileServer/'+filename, 'rb')
-            newChar = file.read(1)
-            data = bytes(''.encode('ascii'))
-            while newChar:
-                data = data + newChar
-                newChar = file.read(Controller.buffer_size)
-                if not newChar:
-                    break
-            self.SendData(data, dataPort)
-            file.close()
-        except:
-                print("Client sent bad request")
-                self.SendBlankData(dataPort)
-
-    """
-    " @summary Handle the client command to store a file.
-    " @param filename The name of the expected file
-    " @param dataPort The port the file will be received over
-    """
-    def StoreFile(self, filename, dataPort):
-        bytes = self.GetData(dataPort)
-        print("got file")
-        file = open('./FileServer/' + filename, 'wb')
-        file.write(bytes)
-        file.close()
 
     """
     " @summary Send data to the client

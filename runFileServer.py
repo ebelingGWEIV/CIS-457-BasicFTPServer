@@ -1,4 +1,4 @@
-import FileServerManager
+import ServerManager
 import signal
 import sys
 
@@ -23,6 +23,6 @@ if __name__ == '__main__':
 
     welcomePort = int(getPortNumber())
     if 0 < welcomePort <= 65535:
-        myServer = FileServerManager.FileServer("localhost", welcomePort)
+        myServer = ServerManager.FileServer("localhost", welcomePort)
     else:
         print("User gave an invalid port number")

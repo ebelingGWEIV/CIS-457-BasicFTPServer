@@ -2,13 +2,11 @@ import socket
 import os
 
 class Client():
-    buffer_size = 4096 #I put this here on accident, but it made me realized that classes can have properties. Now I wish it wasn't nearly done with the project, because there are things I would change.
+    buffer_size = 4096
     """
     @param server IP of the Data connection
     """
     def __init__(self, ip):
-        # These are probably all things that should be Client properties, but it's too late now. This is my first python
-        # project, so I had a lot to learn.
         self.ip = ip
         self.commandConnected = False
         self.dataConnectionOpen = False

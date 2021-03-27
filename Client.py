@@ -7,7 +7,7 @@ class Client():
     @param server IP of the Data connection
     """
     def __init__(self, ip):
-        self.ip = ip
+        self.myIP = ip
         self.commandConnected = False
         self.dataConnectionOpen = False
         self.welcomeConnected = False
@@ -70,7 +70,7 @@ class Client():
     " @summary Ask the fileserver for a file by name. Opens a seperate data connection to receive the file on.
     " @param filename 
     """
-    def RetreiveFile(self, filename):
+    def RetreiveFile(self, filename): #todo update to get file from a selected host
         self.sendCommand("RETR " + filename + " " + str(self.dataPort))
         bytes = self.GetData(self.dataPort)
         print("got file")
@@ -79,35 +79,25 @@ class Client():
         file.close()
 
     """
-    " @summary Run the store file command. Loads a file from disk as bytes and sends it to the file server over a new data connection.
-    " @param name of the file in ./LocalStorage
-    """
-    def StoreFile(self, filename):
-        self.sendCommand("STOR " + filename + " " + str(self.dataPort))
-        try:
-            file = open('./LocalStorage/' + filename, 'rb')
-            newChar = file.read(1)
-            data = bytes(''.encode('ascii'))
-            while newChar:
-                data = data + newChar
-                newChar = file.read(Client.buffer_size)
-                if not newChar:
-                    break
-            self.ConnectAndSendData(self.fileServerIP, data)
-            file.close()
-        except:
-            print("Error occurred while sending file to server")
-
-
-    """
     " @summary Print a list of the files stored on the file server
     """
     def ListFiles(self):
         self.sendCommand("LIST " + str(self.dataPort))
         files = bytes(self.GetData(self.dataPort)).decode('ascii')
-        print("Files stored on server are: ")
+        print("Available Files:\n")
         print(files)
         self.CloseDataConnection()
+
+    """
+    " @summary Add a file description to the server
+    " @param file Name of the stored file
+    " @param description A description of the file used for keyword searches
+    " @param speed The type of connection or the upload speed of it
+    """
+    def AddFile(self, file, speed, description):
+        # Use the data port number for the client's server port. There will be no problems because the client's ip and port will be different from the ControlServer's
+        #todo turn descirption into a string
+        command = "ADD " + description + " " + file + " " + self.myIP + " " + str(self.dataPort) + " " + str(speed)
 
     """
     " @summary Send a quit message to the fileserver, and closes this client.
@@ -123,7 +113,7 @@ class Client():
     def CreateDataSocketServer(self):
         self.dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.dataSocket.settimeout(self.timeout)
-        self.dataSocket.bind((str(self.ip), int(self.dataPort)))
+        self.dataSocket.bind((str(self.myIP), int(self.dataPort)))
         self.dataSocket.listen()
         self.dataConnection, addr = self.dataSocket.accept()
         self.dataConnectionOpen = True

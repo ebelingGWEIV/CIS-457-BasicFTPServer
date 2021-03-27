@@ -38,7 +38,7 @@ class Controller():
                 self.Quit()
 
     """
-    " @summary Handle all expected commands from the client (List, retr, stor, and quit)
+    " @summary Handle all expected commands from the client
     " @param message The full message received from the client as a string
     """
     def HandleMessage(self, message):

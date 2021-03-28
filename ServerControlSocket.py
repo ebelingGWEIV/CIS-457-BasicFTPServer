@@ -23,8 +23,6 @@ class Controller():
         self.dataSeverOpen = False
         self.MyFiles = [] # empty list for files added by this host
 
-
-
     """
     " @summary Receive messages from the client and send them to the message handler on a separate thread.
     """
@@ -56,17 +54,16 @@ class Controller():
                 pass
             elif command[0].lower() == "search":
                 print("returning info search with keyword " + command[1])
-                hostInfo = Controller.FileRefs.search(command[1])
-                if hostInfo is None:
-                    hostInfo = FileRefList.HostInfo("", "")
-                self.Search(hostInfo, command[2])
+                self.Search(command[1], command[2])
                 pass
             else:
                 print("Command not supported")
                 pass
-        except:
+        except IndexError as e:
+            print("Client used correct command but did not include all arguments")
+        except Exception as e:
+            print(e)
             print("Client sent bad request that could not be responded to on the data port. Closing this connection")
-            self.Quit()
 
 
     """
@@ -75,28 +72,41 @@ class Controller():
     "        fileName, hostName, file port, speed, confirmation port, description
     """
     def AddFile(self, command):
-        description = command[6]
         fileName = command[1]
         hostName = command[2]
         portNum = command[3]
         speed = command[4]
         confirmPort = command[5]
+        description = command[6:]
 
-        fileTup = (fileName, hostName, portNum, speed)
+        descriptor = ""
+        for word in description:
+            descriptor = descriptor + " " + word
 
-        print("adding file " + description)
-        self.MyFiles.append(description)  # Add to the list of my files added
-        Controller.FileRefs.add(description, fileTup)  # Add to the list of all files registered
+        try:
+            fileTup = (fileName, hostName, portNum, speed)
 
-        self.SendData(("file added\n").encode('ascii'), confirmPort)
+            print("adding file " + descriptor)
+            self.MyFiles.append(descriptor)  # Add to the list of my files added
+            Controller.FileRefs.add(descriptor, fileTup)  # Add to the list of all files registered
+
+            self.SendData(("file added\n").encode('ascii'), confirmPort)
+        except:
+            print("error adding file")
+            self.SendData(("could not add\n").encode('ascii'), confirmPort)
 
     """
     " @summary Send information about a host through the data port
     " @param hostInfo The name and data port of the host server as a HostInfo object
     " @param dataPort The port to send the host info on 
     """
-    def Search(self, hostInfo, dataPort):
-        message = hostInfo.HostName + "," + hostInfo.PortNum + "\n"
+    def Search(self, keyword, dataPort):
+        hostInfo = Controller.FileRefs.search(keyword)
+        if len(hostInfo) == 0:
+            hostInfo.append(FileRefList.HostInfo("", "", "", ""))
+        message = ""
+        for host in hostInfo:
+            message = host.FileName + ", " + host.HostName + " " + str(host.PortNum) + "\n"
         self.SendData((message).encode('ascii'), dataPort)
 
     """
@@ -104,13 +114,17 @@ class Controller():
     " @param dataPort The name of the port to send the list over
     """
     def List(self, dataPort):
-        message = ""
-        list = Controller.FileRefs.list()
-        message = ""
-        if len(list) > 0:
-            for entry in list:
-                message = message + entry[0] + ", " + entry[1] + ", " + entry[2] + "\n"
-        self.SendData((message).encode('ascii'), dataPort)
+        try:
+            message = ""
+            list = Controller.FileRefs.list()
+            message = ""
+            if len(list) > 0:
+                for entry in list:
+                    message = message + entry[0] + ", " + entry[1] + ", " + entry[2] + " " + entry[3] + "\n"
+            self.SendData((message).encode('ascii'), dataPort)
+        except:
+            print("error getting file list")
+            self.SendBlankData(dataPort)
 
     """
     " @summary Send data to the client

@@ -8,11 +8,22 @@ from ServerManager import FileServer
 
 
 class ClientServerManager:
+    """
+    " @summary Make the object, but don't start anything
+    """
 
-    def __init__(self, server, port):
+    def __init__(self):
         self.Run = False
         self.connectedPorts = []
         self.RunningControlSockets = []
+
+    """
+    " @summary Start the server
+    " @param server IP of the server
+    " @param port port to use for welcome connections
+    """
+
+    def Start(self, server, port):
         try:
             # The file server needs a directory to manage
             if not os.path.isdir("./FileServer"):
@@ -24,7 +35,6 @@ class ClientServerManager:
         except:
             print("Server is shutting down")
             self.__del__()
-
 
     """
     @summary Bind server to IP and port number. Does not begin accepting client connections

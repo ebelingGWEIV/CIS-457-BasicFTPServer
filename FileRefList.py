@@ -26,7 +26,7 @@ class FileRefs(object):
         for entry in self.files:
             host = entry[1]
             # print("host info " + host.FileName)
-            fileList.append((host.Speed, host.HostName, host.FileName))
+            fileList.append((host.FileName, host.Speed, host.HostName, host.PortNum))
         return fileList
 
 class HostInfo:

@@ -24,6 +24,7 @@ if __name__ == '__main__':
 
     welcomePort = int(getPortNumber())
     if 0 < welcomePort <= 65535:
-        myServer = ServerManager.FileServer("localhost", welcomePort)
+        myServer = ServerManager.FileServer()
+        myServer.Start("localhost", welcomePort)
     else:
         print("User gave an invalid port number")

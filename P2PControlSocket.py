@@ -29,7 +29,6 @@ class ClientControlSocket:
                 print("Client closed forcibly. Server on port " + str(self.myPort) + " is closing")
                 self.Close()
 
-
     """
     " @summary Handle all expected commands from the client
     " @param message The full message received from the client as a string
@@ -37,8 +36,9 @@ class ClientControlSocket:
     def HandleMessage(self, message):
         try:
             command = str(message).split()
-            if command[0].lower() == "get":
-                print("not geting")
+            if command[0].lower() == "retr":
+                self.ReturnFile(command[1], command[2])
+                print("file returned: " + command[1])
                 pass
             if command[0].lower() == "quit":
                 self.Close()
@@ -47,14 +47,28 @@ class ClientControlSocket:
                 pass
         except:
             print("Client sent bad request that could not be responded to on the data port. Closing this connection")
-            self.Quit()
+            self.Close()
 
-
-    def Send(self):
-        #todo implement
-        print("not sending")
-        pass
-
+    """
+    " @summary Handle the client command to return a file
+    " @param filename The name of the file to send the client
+    " @param dataPort The name of the port to send the file over
+    """
+    def ReturnFile(self, filename, dataPort):
+        try:
+            file = open('./FileServer/'+filename, 'rb')
+            newChar = file.read(1)
+            data = bytes(''.encode('ascii'))
+            while newChar:
+                data = data + newChar
+                newChar = file.read(ClientControlSocket.buffer_size)
+                if not newChar:
+                    break
+            self.SendData(data, dataPort)
+            file.close()
+        except:
+                print("Client sent bad request")
+                self.SendBlankData(dataPort)
 
     """
     " @summary Send data to the client
@@ -110,7 +124,6 @@ class ClientControlSocket:
         self.Run = False
         self.dataSeverOpen = False
         self.CloseDataConnection()
-        pass
 
     """
     " @summary Safely delete using the Quit method

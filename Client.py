@@ -1,5 +1,8 @@
 import socket
 import os
+import random
+import P2PServerManager
+import _thread
 
 class Client():
     buffer_size = 4096
@@ -12,10 +15,21 @@ class Client():
         self.dataConnectionOpen = False
         self.welcomeConnected = False
         self.dataPort = 0
+        self.myServerPort = self.randPort()
         if not os.path.isdir("./LocalStorage"):
             print("Creating LocalStorage directory")
             os.mkdir("./LocalStorage")
 
+        self.myServer = P2PServerManager.FileServer()
+        _thread.start_new_thread(self.myServer.Start, (self.myIP, self.myServerPort, ))
+        pass
+
+    """
+    " Get a valid port number
+    " @return a random number between 1024 and 65535
+    """
+    def randPort(self):
+        return random.randint(1024, 65535)
     """
     " Connect to the server and wait for a message with the new port to connect the control socket to.
     " @param server IP of the file server
@@ -67,10 +81,37 @@ class Client():
         self.controlSocket.send(str(command).encode('ascii'))
 
     """
+    " @Summary Send a search request to the file server
+    " @param keyword Keyword to use for search
+    """
+    def Search(self, keyword):
+        self.sendCommand("SEARCH " + keyword + " " + str(self.dataPort))
+        files = bytes(self.GetData(self.dataPort)).decode('ascii')
+        print("Search results:\n")
+        print(files)
+        self.CloseDataConnection()
+
+    """
+    " @Summary Creates a new client to get the requested file from a peer
+    " @param host ip of file's host
+    " @param port port to get file over
+    " @param filename name of requested file
+    """
+    def Get(self, host, port, filename):
+        # start a new client
+        tmpClient = Client(self.myIP)
+        # connect to the client-server
+        tmpClient.connectToServer(host, port)
+        # call its RetrieveFile command
+        tmpClient.RetreiveFile(filename)
+        # close the client
+        tmpClient.Quit()
+
+    """
     " @summary Ask the fileserver for a file by name. Opens a seperate data connection to receive the file on.
     " @param filename 
     """
-    def RetreiveFile(self, filename): #todo update to get file from a selected host
+    def RetreiveFile(self, filename):
         self.sendCommand("RETR " + filename + " " + str(self.dataPort))
         bytes = self.GetData(self.dataPort)
         print("got file")
@@ -100,10 +141,7 @@ class Client():
         for word in description:
             descriptor = descriptor + " " + word
 
-        # Data port is sent twice because, conceivably, the data port for GET is different than the reply port.
-        # The reason a reply port is used instead of utilizing the duplex feature of TCP is because it was already implemented.
-        #                                                   port for files                       port for confirmation
-        command = "ADD " + file + " " + self.myIP + " " + str(self.dataPort) + " " + str(speed) + " " + str(self.dataPort) + descriptor
+        command = "ADD " + file + " " + self.myIP + " " + str(self.myServerPort) + " " + str(speed) + " " + str(self.dataPort) + descriptor
         self.sendCommand(command)
         confirmation = bytes(self.GetData(self.dataPort)).decode('ascii')
         print(confirmation)
@@ -177,3 +215,4 @@ class Client():
         if(self.commandConnected == True):
             self.controlSocket.close()
         self.CloseDataConnection()
+        self.myServer.closeControlServer()

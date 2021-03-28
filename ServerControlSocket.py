@@ -106,8 +106,10 @@ class Controller():
     def List(self, dataPort):
         message = ""
         list = Controller.FileRefs.list()
-        for entry in list:
-            message = entry[0] + ", " + entry[1] + ", " + entry[2] + "\n"
+        message = ""
+        if len(list) > 0:
+            for entry in list:
+                message = entry[0] + ", " + entry[1] + ", " + entry[2] + "\n"
         self.SendData((message).encode('ascii'), dataPort)
 
     """

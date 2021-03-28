@@ -20,9 +20,13 @@ class FileRefs(object):
 
     def list(self):
         fileList = []
+        if len(self.files) == 0:
+            return fileList
+
         for entry in self.files:
             host = entry[1]
-            fileList.append((host.speed, host.host, host.file))
+            print("hsot info " + host.FileName)
+            fileList.append((host.Speed, host.HostName, host.FileName))
         return fileList
 
 class HostInfo:

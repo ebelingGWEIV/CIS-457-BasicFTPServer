@@ -178,10 +178,11 @@ class Controller():
     """
     def Quit(self):
         self.Run = False
+        self.dataSeverOpen = False
         self.CloseDataConnection()
 
     """
-    " @summary Safel delete using the Quit method
+    " @summary Safely delete using the Quit method
     """
     def __del__(self):
         self.Quit()

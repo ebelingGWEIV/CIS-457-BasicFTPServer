@@ -3,6 +3,9 @@ import _thread
 import os
 import random
 
+import ServerControlSocket
+from ServerManager import FileServer
+
 
 class ClientServerManager:
 

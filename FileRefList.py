@@ -10,7 +10,8 @@ class FileRefs(object):
         return hostList
 
     def add(self, descript, fileTup):
-        self.files.append((descript, HostInfo(fileTup[0], fileTup[1], fileTup[2], fileTup[3])))
+        newTup = (descript, HostInfo(fileTup[0], fileTup[1], fileTup[2], fileTup[3]))
+        self.files.append(newTup)
 
     def remove(self, files):
         for entry in self.files:

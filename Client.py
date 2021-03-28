@@ -9,19 +9,21 @@ class Client():
     """
     @param server IP of the Data connection
     """
-    def __init__(self, ip):
+    def __init__(self, ip, makeServer = True):
         self.myIP = ip
         self.commandConnected = False
         self.dataConnectionOpen = False
         self.welcomeConnected = False
+        self.serverRunning = makeServer
         self.dataPort = 0
         self.myServerPort = self.randPort()
         if not os.path.isdir("./LocalStorage"):
             print("Creating LocalStorage directory")
             os.mkdir("./LocalStorage")
 
-        self.myServer = P2PServerManager.FileServer()
-        _thread.start_new_thread(self.myServer.Start, (self.myIP, self.myServerPort, ))
+        if makeServer:
+            self.myServer = P2PServerManager.ClientServerManager()
+            _thread.start_new_thread(self.myServer.Start, (self.myIP, self.myServerPort, ))
         pass
 
     """
@@ -97,15 +99,18 @@ class Client():
     " @param port port to get file over
     " @param filename name of requested file
     """
-    def Get(self, host, port, filename):
-        # start a new client
-        tmpClient = Client(self.myIP)
-        # connect to the client-server
-        tmpClient.connectToServer(host, port)
-        # call its RetrieveFile command
-        tmpClient.RetreiveFile(filename)
-        # close the client
-        tmpClient.Quit()
+    def Get(self, filename, host, port):
+        try:
+            # start a new client
+            tmpClient = Client(self.myIP, False)
+            # connect to the client-server
+            tmpClient.connectToServer(host, port)
+            # call its RetrieveFile command
+            tmpClient.RetreiveFile(filename)
+            # close the client
+            tmpClient.Quit()
+        except:
+            print("Could not get file \"" + filename + "\" from host \"" + host + "\" on port " + port)
 
     """
     " @summary Ask the fileserver for a file by name. Opens a seperate data connection to receive the file on.
@@ -215,4 +220,5 @@ class Client():
         if(self.commandConnected == True):
             self.controlSocket.close()
         self.CloseDataConnection()
-        self.myServer.closeControlServer()
+        if self.serverRunning:
+            self.myServer.closeControlServer()

@@ -2,7 +2,7 @@ import socket
 
 class ClientControlSocket:
     buffer_size = 4096
-    timeout = 50.0
+    timeout = 10.0
 
     def __init__(self, connectionInfo, timeout = 50.0, myIp = "localhost"):
         self.controlCon = connectionInfo[0]
@@ -27,7 +27,7 @@ class ClientControlSocket:
                 self.HandleMessage(message)
             except ConnectionResetError as ex:
                 print("Client closed forcibly. Server on port " + str(self.myPort) + " is closing")
-                self.Close()
+                self.Quit()
 
     """
     " @summary Handle all expected commands from the client
@@ -35,19 +35,20 @@ class ClientControlSocket:
     """
     def HandleMessage(self, message):
         try:
+            print("P2P: " + message)
             command = str(message).split()
             if command[0].lower() == "retr":
                 self.ReturnFile(command[1], command[2])
                 print("file returned: " + command[1])
                 pass
-            if command[0].lower() == "quit":
-                self.Close()
+            elif command[0].lower() == "quit":
+                self.Quit()
             else:
                 print("Command not supported")
                 pass
         except:
             print("Client sent bad request that could not be responded to on the data port. Closing this connection")
-            self.Close()
+            self.Quit()
 
     """
     " @summary Handle the client command to return a file
@@ -105,7 +106,6 @@ class ClientControlSocket:
         self.dataConnectionOpen = True
 
 
-
     """
     " @summary If the data connection is currently open, close the connections and the socket.
     """
@@ -120,7 +120,7 @@ class ClientControlSocket:
     " @summary Reset flags and close connection to the client.
     " @note The socket is closed in the FileServerManager
     """
-    def Close(self):
+    def Quit(self):
         self.Run = False
         self.dataSeverOpen = False
         self.CloseDataConnection()
@@ -129,4 +129,4 @@ class ClientControlSocket:
     " @summary Safely delete using the Quit method
     """
     def __del__(self):
-        self.Close()
+        self.Quit()

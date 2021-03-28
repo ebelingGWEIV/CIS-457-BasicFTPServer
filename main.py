@@ -7,7 +7,7 @@ def help():
     print("--------------------------------------")
     print("connect <server IP> <port>")
     print("quit")
-    print("retr <server> <port> <filename>")
+    print("get <server> <port> <filename>")
     print("list")
     print("add <filename> <speed> <description>")
     print("--------------------------------------")
@@ -31,8 +31,8 @@ if __name__ == '__main__':
         elif command[0].lower() == "quit":
             myClient.Quit()
             break
-        elif command[0].lower() == "retr" and len(command) == 2:
-            myClient.RetreiveFile(command[1])
+        elif command[0].lower() == "get" and len(command) == 4:
+            myClient.Get(command[3], command[1], command[2])
         elif command[0].lower() == "list" and len(command) == 1:
             myClient.ListFiles()
         elif command[0].lower() == "add" and len(command) >= 4:

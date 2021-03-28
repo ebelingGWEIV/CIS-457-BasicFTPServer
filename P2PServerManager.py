@@ -2,12 +2,10 @@ import socket
 import _thread
 import os
 import random
-
-import ServerControlSocket
-from ServerManager import FileServer
-
+import P2PControlSocket
 
 class ClientServerManager:
+    timeout = 50.0
     """
     " @summary Make the object, but don't start anything
     """
@@ -73,7 +71,7 @@ class ClientServerManager:
 
         # Tell the client what port to connect to and wait for a connection
         controlSocket = self.Create(self.serverIP, newPort)
-        controlSocket.settimeout(FileServer.timeout)
+        controlSocket.settimeout(ClientServerManager.timeout)
         controlSocket.listen()
         connection_socket.send(("connect " + str(newPort)).encode('ascii'))
         newConnection, addr = controlSocket.accept()
@@ -82,7 +80,7 @@ class ClientServerManager:
 
         connectionInfo = (newConnection, addr)
 
-        myControlSocket = ServerControlSocket.Controller(connectionInfo, FileServer.timeout, self.serverIP) # init the control server
+        myControlSocket = P2PControlSocket.ClientControlSocket(connectionInfo, ClientServerManager.timeout, self.serverIP) # init the control server
         self.RunningControlSockets.append(myControlSocket) # add it to the list of running servers
         myControlSocket.RunControlServer() # start the control server
 

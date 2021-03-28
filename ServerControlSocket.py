@@ -42,11 +42,11 @@ class Controller():
     def HandleMessage(self, message):
         try:
             command = str(message).split()
+            if len(command) == 0: return
             if command[0].lower() == "list":
                 self.List(command[1])
                 pass
             elif command[0].lower() == "quit":
-                Controller.FileRefs.remove(self.MyFiles)
                 self.Quit()
                 pass
             elif command[0].lower() == "add":
@@ -59,11 +59,12 @@ class Controller():
             else:
                 print("Command not supported")
                 pass
-        except IndexError as e:
-            print("Client used correct command but did not include all arguments")
+        except ConnectionRefusedError as e:
+            print("Connection over data port was refused. Cannot communicate, closing connection")
+            self.Quit()
         except Exception as e:
             print(e)
-            print("Client sent bad request that could not be responded to on the data port. Closing this connection")
+            print("Client sent bad request that could not be responded to on the data port.")
 
 
     """
@@ -194,6 +195,7 @@ class Controller():
         self.Run = False
         self.dataSeverOpen = False
         self.CloseDataConnection()
+        Controller.FileRefs.remove(self.MyFiles)
 
     """
     " @summary Safely delete using the Quit method

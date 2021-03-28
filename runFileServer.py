@@ -6,7 +6,8 @@ import sys
 def signal_handler(sig, frame):
     if(sig == signal.SIGINT):
         print("Closing the server")
-        myServer.closeControlServer()
+        del myServer
+
 
 
 def getPortNumber():

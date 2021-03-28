@@ -96,8 +96,18 @@ class Client():
     """
     def AddFile(self, file, speed, description):
         # Use the data port number for the client's server port. There will be no problems because the client's ip and port will be different from the ControlServer's
-        #todo turn descirption into a string
-        command = "ADD " + description + " " + file + " " + self.myIP + " " + str(self.dataPort) + " " + str(speed)
+        descriptor = ""
+        for word in description:
+            descriptor = descriptor + " " + word
+
+        # Data port is sent twice because, conceivably, the data port for GET is different than the reply port.
+        # The reason a reply port is used instead of utilizing the duplex feature of TCP is because it was already implemented.
+        #                                                   port for files                       port for confirmation
+        command = "ADD " + file + " " + self.myIP + " " + str(self.dataPort) + " " + str(speed) + " " + str(self.dataPort) + descriptor
+        self.sendCommand(command)
+        confirmation = bytes(self.GetData(self.dataPort)).decode('ascii')
+        print(confirmation)
+        self.CloseDataConnection()
 
     """
     " @summary Send a quit message to the fileserver, and closes this client.

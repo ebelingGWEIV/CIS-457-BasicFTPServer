@@ -27,6 +27,7 @@ if __name__ == '__main__':
         elif command[0].lower() == "add":
             print("description: ")
             print(command[3:])
+            # name speed descriptor
             myClient.AddFile(command[1], command[2], command[3:])
 
     _thread.exit()

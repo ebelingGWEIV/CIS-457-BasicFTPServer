@@ -49,19 +49,10 @@ class Controller():
                 pass
             elif command[0].lower() == "quit":
                 Controller.FileRefs.remove(self.MyFiles)
-                self.__del__()
+                self.Quit()
                 pass
             elif command[0].lower() == "add":
-                description = command[1]
-                fileName = command[2]
-                hostName = command[3]
-                portNum = command[4]
-                speed = command[5]
-                fileTup = (fileName, hostName, portNum, speed)
-
-                print("adding file " + description)
-                self.MyFiles.append(description) # Add to the list of my files added
-                Controller.FileRefs.add(description, fileTup) # Add to the list of all files registered
+                self.AddFile(command)
                 pass
             elif command[0].lower() == "search":
                 print("returning info search with keyword " + command[1])
@@ -72,8 +63,32 @@ class Controller():
                 pass
             else:
                 print("Command not supported")
+                pass
         except:
-            print("Client sent bad request that could not be responded to on the data port")
+            print("Client sent bad request that could not be responded to on the data port. Closing this connection")
+            self.Quit()
+
+
+    """
+    " @summary Add a file to the list of file references
+    " @param command The command recevied from the client
+    "        fileName, hostName, file port, speed, confirmation port, description
+    """
+    def AddFile(self, command):
+        description = command[6]
+        fileName = command[1]
+        hostName = command[2]
+        portNum = command[3]
+        speed = command[4]
+        confirmPort = command[5]
+
+        fileTup = (fileName, hostName, portNum, speed)
+
+        print("adding file " + description)
+        self.MyFiles.append(description)  # Add to the list of my files added
+        Controller.FileRefs.add(description, fileTup)  # Add to the list of all files registered
+
+        self.SendData(("file added\n").encode('ascii'), confirmPort)
 
     """
     " @summary Send information about a host through the data port

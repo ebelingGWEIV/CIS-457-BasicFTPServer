@@ -25,9 +25,9 @@ class ClientServerManager:
     def Start(self, server, port):
         try:
             # The file server needs a directory to manage
-            if not os.path.isdir("./FileServer"):
-                print("Creating FileServer directory")
-                os.mkdir("./FileServer")
+            if not os.path.isdir("./LocalStorage"):
+                print("Creating Client storage directory")
+                os.mkdir("./LocalStorage")
             # Create and listen to the welcome socket the server will use
             welcomeSocket = self.Create(server, port)
             self.ListenForConnections(welcomeSocket)

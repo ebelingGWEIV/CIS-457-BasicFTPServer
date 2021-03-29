@@ -1,5 +1,5 @@
 ## George Ebeling 
-## CIS 457 Project 1
+## CIS 457 Project 2
 
 ### Starting the File Server
 
@@ -11,8 +11,9 @@
 
 #### Client Commands
 
-1. CONNECT < server name/IP address> <server port >
-2. LIST
-3. RETR < filename >
-4. STOR < filename >
-5. QUIT
+1. CONNECT < server name/IP address> <server port>
+2. REG <username> <speed>
+3. ADD <filename> <descriptors>
+4. SEARCH <keyword>
+5. LIST
+6. QUIT

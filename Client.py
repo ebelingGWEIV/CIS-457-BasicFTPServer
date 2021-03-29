@@ -141,22 +141,36 @@ class Client:
         self.CloseDataConnection()
 
     """
+    " @summary Print a list of the files stored on the file server
+    """
+    def Register(self, name, speed):
+        self.sendCommand("REG " + str(name) + " " + str(speed) + " " + str(self.dataPort))
+        confirm = bytes(self.GetData(self.dataPort)).decode('ascii')
+        print(confirm)
+        self.CloseDataConnection()
+
+    """
     " @summary Add a file description to the server
     " @param file Name of the stored file
     " @param description A description of the file used for keyword searches
     " @param speed The type of connection or the upload speed of it
     """
-    def AddFile(self, file, speed, description):
-        # Use the data port number for the client's server port. There will be no problems because the client's ip and port will be different from the ControlServer's
-        descriptor = ""
-        for word in description:
-            descriptor = descriptor + " " + word
+    def AddFile(self, file, description):
+        try:
+            # Use the data port number for the client's server port. There will be no problems because the client's ip and port will be different from the ControlServer's
+            descriptor = ""
+            for word in description:
+                descriptor = descriptor + " " + word
 
-        command = "ADD " + file + " " + self.myIP + " " + str(self.myServerPort) + " " + str(speed) + " " + str(self.dataPort) + descriptor
-        self.sendCommand(command)
-        confirmation = bytes(self.GetData(self.dataPort)).decode('ascii')
-        print(confirmation)
+            command = "ADD " + file + " " + str(self.myServerPort) + " " + str(self.dataPort) + descriptor
+            self.sendCommand(command)
+            confirmation = bytes(self.GetData(self.dataPort)).decode('ascii')
+            print(confirmation)
+        except:
+            print(f'could not add file {file}')
+
         self.CloseDataConnection()
+
 
     """
     " @summary Send a quit message to the fileserver, and closes this client.

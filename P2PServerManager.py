@@ -55,7 +55,7 @@ class ClientServerManager:
 
         listening_socket.listen()  # start allowing connections to the server
         while self.Run == True:
-            print("waiting for connections")
+            # print("waiting for connections") #This message isn't needed for the client
             connection_socket, addr = listening_socket.accept()
             print("got a connection")
             _thread.start_new_thread(self.onWelcome,

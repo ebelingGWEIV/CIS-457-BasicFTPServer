@@ -15,10 +15,11 @@ def signal_handler(sig, frame):
 def help():
     print("--------------------------------------")
     print("connect <server IP> <port>")
+    print("reg <user name> <speed>")
     print("quit")
     print("get <server> <port> <filename>")
     print("list")
-    print("add <filename> <speed> <description>")
+    print("add <filename> <description>")
     print("--------------------------------------")
 
 
@@ -37,7 +38,8 @@ if __name__ == '__main__':
 
         if command[0].lower() == "connect" and len(command) == 3:
             myClient.connectToServer(command[1], command[2])
-
+        elif command[0].lower() == "reg" and len(command) == 3:
+            myClient.Register(command[1], command[2])
         elif command[0].lower() == "quit":
             myClient.Quit()
             break
@@ -47,11 +49,11 @@ if __name__ == '__main__':
         elif command[0].lower() == "list" and len(command) == 1:
             myClient.ListFiles()
 
-        elif command[0].lower() == "add" and len(command) >= 4:
+        elif command[0].lower() == "add" and len(command) >= 3:
             print("description: ")
-            print(command[3:])
+            print(command[2:])
             # name speed descriptor
-            myClient.AddFile(command[1], command[2], command[3:])
+            myClient.AddFile(command[1], command[2:])
 
         elif command[0].lower() == "search" and len(command) == 2:
             myClient.Search(command[1])

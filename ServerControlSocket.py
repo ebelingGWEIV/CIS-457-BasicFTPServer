@@ -4,6 +4,7 @@ import FileRefList
 class Controller():
     buffer_size = 4096
     FileRefs = FileRefList.FileRefs()  # The list of all files and their hosts declared as a static class property
+    Users = {} # Username, (host, speed)
     """
     " @summary
     " @param
@@ -18,12 +19,26 @@ class Controller():
         self.Run = True
         self.dataConnectionOpen = False
         self.dataSeverOpen = False
-        self.MyFiles = [] # empty list for files added by this host
+        self.registered = False
+        self.clientSpeed = ""
+        self.clientUserName = ""
+
+    def SetupUser(self, name, speed, confirmPort):
+        if not (name in Controller.Users):
+            self.clientUserName = name
+            self.clientSpeed = speed
+            Controller.Users[name] = (str(self.ip), str(speed))
+            self.registered = True
+            self.SendData(("User is registered").encode('ascii'), confirmPort)
+            pass
+        else:
+            self.SendData(("User name is taken").encode('ascii'), confirmPort)
 
     """
     " @summary Receive messages from the client and send them to the message handler on a separate thread.
     """
     def RunControlServer(self):
+
         while(self.Run == True):
             try:
                 message = self.controlCon.recv(Controller.buffer_size).decode('ascii')  # we assume that
@@ -40,7 +55,15 @@ class Controller():
         try:
             command = str(message).split()
             if len(command) == 0: return
-            if command[0].lower() == "list":
+            print(f'user: {self.clientUserName} - {command}')
+            if command[0].lower() == "reg":
+                self.SetupUser(command[1], command[2], command[3])
+                return
+
+            if self.registered is False:
+                print("user sent command but is not registered")
+                return
+            elif command[0].lower() == "list":
                 self.List(command[1])
                 pass
             elif command[0].lower() == "quit":
@@ -71,23 +94,22 @@ class Controller():
     """
     def AddFile(self, command):
         fileName = command[1]
-        hostName = command[2]
-        portNum = command[3]
-        speed = command[4]
-        confirmPort = command[5]
-        description = command[6:]
+        hostName = self.ip
+        portNum = command[2]
+        speed = self.clientSpeed
+        confirmPort = command[3]
+        description = command[4:]
 
         descriptor = ""
         for word in description:
             descriptor = descriptor + " " + word
 
-            fileTup = (fileName, hostName, portNum, speed)
+        fileTup = (fileName, hostName, portNum, speed, self.clientUserName)
 
-            print("adding file " + descriptor)
-            self.MyFiles.append(hostName)  # Add to the list of my files added
-            Controller.FileRefs.add(descriptor, fileTup)  # Add to the list of all files registered
+        print("adding file " + descriptor)
+        Controller.FileRefs.add(descriptor, fileTup)  # Add to the list of all files registered
 
-            self.SendBlankData(confirmPort)
+        self.SendData(("file added").encode('ascii'), confirmPort)
 
     """
     " @summary Send information about a host through the data port
@@ -97,11 +119,11 @@ class Controller():
     def Search(self, keyword, dataPort):
         hostInfo = Controller.FileRefs.search(keyword)
         if len(hostInfo) == 0:
-            hostInfo.append(FileRefList.HostInfo("", "", "", ""))
+            hostInfo.append(FileRefList.HostInfo("", "", "", "", ""))
         message = ""
         for host in hostInfo:
-            message = host.FileName + ", " + host.HostName + " " + str(host.PortNum) + "\n"
-        self.SendData((message).encode('ascii'), dataPort)
+            message = host.Speed + ", " + host.HostName + "/" + str(host.PortNum) + ", " + host.FileName + " " + "\n"
+        self.SendData(message.encode('ascii'), dataPort)
 
     """
     " @summary Handle the client command to return a directory list of the FileServer
@@ -109,7 +131,6 @@ class Controller():
     """
     def List(self, dataPort):
         try:
-            message = ""
             list = Controller.FileRefs.list()
             message = ""
             if len(list) > 0:
@@ -186,9 +207,16 @@ class Controller():
     """
     def Quit(self):
         self.Run = False
+        self.dataConnectionOpen = False
         self.dataSeverOpen = False
+        self.registered = False
         self.CloseDataConnection()
-        Controller.FileRefs.remove(self.MyFiles)
+
+        Controller.FileRefs.remove(self.clientUserName)
+        try:
+            Controller.Users.pop(self.clientUserName)
+        except:
+            pass  # for cases where user closes and server is forced closed but server wasn't deconstructed yet
 
     """
     " @summary Safely delete using the Quit method

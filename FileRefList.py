@@ -11,13 +11,13 @@ class FileRefs(object):
         return hostList
 
     def add(self, descript, fileTup):
-        newTup = (descript, HostInfo(fileTup[0], fileTup[1], fileTup[2], fileTup[3]))
+        newTup = (descript, HostInfo(fileTup[0], fileTup[1], fileTup[2], fileTup[3], fileTup[4]))
         self.files.append(newTup)
 
-    def remove(self, files):
+    def remove(self, user):
         for entry in self.files:
-            if list(files).__contains__(entry[1].HostName):
-                print("removing " + entry[1].HostName)
+            if entry[1].User == user:
+                print("removing " + entry[1].FileName)
                 self.files.remove(entry)
 
     def list(self):
@@ -27,13 +27,13 @@ class FileRefs(object):
 
         for entry in self.files:
             host = entry[1]
-            # print("host info " + host.FileName)
             fileList.append((host.FileName, host.Speed, host.HostName, host.PortNum))
         return fileList
 
 
 class HostInfo:
-    def __init__(self, file, host, port, speed):
+    def __init__(self, file, host, port, speed, user):
+        self.User = user
         self.FileName = file
         self.HostName = host
         self.PortNum = port

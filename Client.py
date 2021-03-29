@@ -103,17 +103,12 @@ class Client:
     def Get(self, filename, host, port):
         try:
             # start a new client
-            print("starting")
             tmpClient = Client(self.myIP, False)
             # connect to the client-server
-            print("connecting")
             tmpClient.connectToServer(host, port)
-            print("connected " + str(self.commandConnected))
             # call its RetrieveFile command
-            print("getting")
             tmpClient.RetreiveFile(filename)
             # close the client
-            print("quitting")
             tmpClient.Quit()
         except:
             print("Could not get file \"" + filename + "\" from host \"" + host + "\" on port " + port)

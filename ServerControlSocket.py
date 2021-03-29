@@ -60,22 +60,35 @@ class Controller():
                 self.SetupUser(command[1], command[2], command[3])
                 return
 
-            if self.registered is False:
-                print("user sent command but is not registered")
-                return
             elif command[0].lower() == "list":
-                self.List(command[1])
+                if self.registered is False:
+                    self.NotRegistered(command[1])
+                    pass
+                else:
+                    self.List(command[1])
                 pass
             elif command[0].lower() == "quit":
-                self.Quit()
-                pass
+                if self.registered is False:
+                    print("User left before registering")
+                    pass
+                else:
+                    self.Quit()
+                    pass
             elif command[0].lower() == "add":
-                self.AddFile(command)
-                pass
+                if self.registered is False:
+                    self.NotRegistered(command[3])
+                    pass
+                else:
+                    self.AddFile(command)
+                    pass
             elif command[0].lower() == "search":
-                print("returning info search with keyword " + command[1])
-                self.Search(command[1], command[2])
-                pass
+                if self.registered is False:
+                    self.NotRegistered(command[2])
+                    pass
+                else:
+                    print("returning info search with keyword " + command[1])
+                    self.Search(command[1], command[2])
+                    pass
             else:
                 print("Command not supported")
                 pass
@@ -86,6 +99,13 @@ class Controller():
             print(e)
             print("Client sent bad request that could not be responded to on the data port.")
 
+    """
+    " @Summary If a user gives a command without registering, tell them so
+    " @param dataPort the port to return on
+    """
+    def NotRegistered(self, dataPort):
+        print("User is not registered")
+        self.SendData("User not registered".encode('ascii'), dataPort)
 
     """
     " @summary Add a file to the list of file references

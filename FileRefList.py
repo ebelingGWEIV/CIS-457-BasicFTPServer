@@ -1,4 +1,5 @@
 class FileRefs(object):
+
     def __init__(self):
         self.files = []
 
@@ -15,8 +16,8 @@ class FileRefs(object):
 
     def remove(self, files):
         for entry in self.files:
-            if list(files).__contains__(entry[1]):
-                print("removing " + entry[1].FileName)
+            if list(files).__contains__(entry[1].HostName):
+                print("removing " + entry[1].HostName)
                 self.files.remove(entry)
 
     def list(self):
@@ -29,6 +30,7 @@ class FileRefs(object):
             # print("host info " + host.FileName)
             fileList.append((host.FileName, host.Speed, host.HostName, host.PortNum))
         return fileList
+
 
 class HostInfo:
     def __init__(self, file, host, port, speed):

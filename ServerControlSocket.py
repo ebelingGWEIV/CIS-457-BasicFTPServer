@@ -1,7 +1,4 @@
 import socket
-import concurrent.futures
-import os
-import time
 import FileRefList
 
 class Controller():
@@ -88,7 +85,7 @@ class Controller():
             fileTup = (fileName, hostName, portNum, speed)
 
             print("adding file " + descriptor)
-            self.MyFiles.append(descriptor)  # Add to the list of my files added
+            self.MyFiles.append(hostName)  # Add to the list of my files added
             Controller.FileRefs.add(descriptor, fileTup)  # Add to the list of all files registered
 
             self.SendData(("file added\n").encode('ascii'), confirmPort)

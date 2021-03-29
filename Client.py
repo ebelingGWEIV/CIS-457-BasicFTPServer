@@ -4,7 +4,8 @@ import random
 import P2PServerManager
 import _thread
 
-class Client():
+
+class Client:
     buffer_size = 4096
     """
     @param server IP of the Data connection
@@ -157,8 +158,14 @@ class Client():
     """
     def Quit(self):
         if(self.commandConnected == True):
+            self.commandConnected = False
             self.sendCommand("quit")
-        self.__del__()
+            self.controlSocket.close()
+        self.CloseDataConnection()
+        if self.serverRunning:
+            self.serverRunning = False
+            self.myServer.closeControlServer()
+            self.myServer.__del__()
 
     """
     " @summary Create the data socket as the server and wait for a connection from the fileserver.
@@ -217,8 +224,4 @@ class Client():
     " @summary Close the control and data sockets.
     """
     def __del__(self):
-        if(self.commandConnected == True):
-            self.controlSocket.close()
-        self.CloseDataConnection()
-        if self.serverRunning:
-            self.myServer.closeControlServer()
+        self.Quit()

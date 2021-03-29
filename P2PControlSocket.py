@@ -129,4 +129,5 @@ class ClientControlSocket:
     " @summary Safely delete using the Quit method
     """
     def __del__(self):
+        print("closing P2P control socket")
         self.Quit()

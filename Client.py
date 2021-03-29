@@ -39,7 +39,7 @@ class Client:
     " @param port Port for control connection on the file server
     " @param timeout Set the timeout for the client's connections
     """
-    def connectToServer(self, server, port = 1609, timeout = 50.0):
+    def connectToServer(self, server, port = 1609, timeout = 10.0):
         if(self.commandConnected == True):
             print("Cannot connect to more than one server")
             return
@@ -103,12 +103,17 @@ class Client:
     def Get(self, filename, host, port):
         try:
             # start a new client
+            print("starting")
             tmpClient = Client(self.myIP, False)
             # connect to the client-server
+            print("connecting")
             tmpClient.connectToServer(host, port)
+            print("connected " + str(self.commandConnected))
             # call its RetrieveFile command
+            print("getting")
             tmpClient.RetreiveFile(filename)
             # close the client
+            print("quitting")
             tmpClient.Quit()
         except:
             print("Could not get file \"" + filename + "\" from host \"" + host + "\" on port " + port)
@@ -158,9 +163,9 @@ class Client:
     """
     def Quit(self):
         if(self.commandConnected == True):
-            self.commandConnected = False
             self.sendCommand("quit")
             self.controlSocket.close()
+            self.commandConnected = False
         self.CloseDataConnection()
         if self.serverRunning:
             self.serverRunning = False

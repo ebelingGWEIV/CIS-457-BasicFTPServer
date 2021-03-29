@@ -39,13 +39,15 @@ class ClientControlSocket:
             command = str(message).split()
             if command[0].lower() == "retr":
                 self.ReturnFile(command[1], command[2])
-                print("file returned: " + command[1])
                 pass
             elif command[0].lower() == "quit":
                 self.Quit()
             else:
                 print("Command not supported")
                 pass
+        except ConnectionRefusedError as e:
+            print("Connection over data port was refused. Cannot communicate, closing connection")
+            self.Quit()
         except:
             print("Client sent bad request that could not be responded to on the data port. Closing this connection")
             self.Quit()
@@ -57,7 +59,7 @@ class ClientControlSocket:
     """
     def ReturnFile(self, filename, dataPort):
         try:
-            file = open('./FileServer/'+filename, 'rb')
+            file = open('./LocalStorage/'+filename, 'rb')
             newChar = file.read(1)
             data = bytes(''.encode('ascii'))
             while newChar:
@@ -66,9 +68,10 @@ class ClientControlSocket:
                 if not newChar:
                     break
             self.SendData(data, dataPort)
+            print("data sent")
             file.close()
         except:
-                print("Client sent bad request")
+                print("Client sent bad request for file")
                 self.SendBlankData(dataPort)
 
     """
@@ -129,5 +132,4 @@ class ClientControlSocket:
     " @summary Safely delete using the Quit method
     """
     def __del__(self):
-        print("closing P2P control socket")
         self.Quit()

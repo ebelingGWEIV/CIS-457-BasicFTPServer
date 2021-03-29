@@ -81,17 +81,13 @@ class Controller():
         for word in description:
             descriptor = descriptor + " " + word
 
-        try:
             fileTup = (fileName, hostName, portNum, speed)
 
             print("adding file " + descriptor)
             self.MyFiles.append(hostName)  # Add to the list of my files added
             Controller.FileRefs.add(descriptor, fileTup)  # Add to the list of all files registered
 
-            self.SendData(("file added\n").encode('ascii'), confirmPort)
-        except:
-            print("error adding file")
-            self.SendData(("could not add\n").encode('ascii'), confirmPort)
+            self.SendBlankData(confirmPort)
 
     """
     " @summary Send information about a host through the data port

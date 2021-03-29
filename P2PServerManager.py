@@ -4,7 +4,6 @@ import os
 import random
 import P2PControlSocket
 
-
 class ClientServerManager:
     timeout = 50.0
     """
@@ -21,7 +20,6 @@ class ClientServerManager:
     " @param server IP of the server
     " @param port port to use for welcome connections
     """
-
     def Start(self, server, port):
         try:
             # The file server needs a directory to manage
@@ -40,7 +38,6 @@ class ClientServerManager:
     @param server IP for the server
     @param controlPort The default port for the server
     """
-
     def Create(self, server, controlPort=1609):
         self.Run = True
         self.serverIP = server
@@ -53,7 +50,6 @@ class ClientServerManager:
     @summary Listen for and handle connections from clients
     @param max_workers The max number of client connections possible (default = 10)
     """
-
     def ListenForConnections(self, listening_socket, max_workers=10):
         if (self.Run == False): return False
 

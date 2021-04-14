@@ -1,30 +1,45 @@
 import socket
 import os
+import random
+import P2PServerManager
+import _thread
 
-class Client():
-    buffer_size = 4096 #I put this here on accident, but it made me realized that classes can have properties. Now I wish it wasn't nearly done with the project, because there are things I would change.
+
+class Client:
+    buffer_size = 4096
     """
     @param server IP of the Data connection
     """
-    def __init__(self, ip):
-        # These are probably all things that should be Client properties, but it's too late now. This is my first python
-        # project, so I had a lot to learn.
-        self.ip = ip
+    def __init__(self, ip, makeServer = True):
+        self.myIP = ip
         self.commandConnected = False
         self.dataConnectionOpen = False
         self.welcomeConnected = False
+        self.serverRunning = makeServer
         self.dataPort = 0
+        self.myServerPort = self.randPort()
         if not os.path.isdir("./LocalStorage"):
             print("Creating LocalStorage directory")
             os.mkdir("./LocalStorage")
 
+        if makeServer:
+            self.myServer = P2PServerManager.ClientServerManager()
+            _thread.start_new_thread(self.myServer.Start, (self.myIP, self.myServerPort, ))
+        pass
+
+    """
+    " Get a valid port number
+    " @return a random number between 1024 and 65535
+    """
+    def randPort(self):
+        return random.randint(1024, 65535)
     """
     " Connect to the server and wait for a message with the new port to connect the control socket to.
     " @param server IP of the file server
     " @param port Port for control connection on the file server
     " @param timeout Set the timeout for the client's connections
     """
-    def connectToServer(self, server, port = 1609, timeout = 50.0):
+    def connectToServer(self, server, port = 1609, timeout = 10.0):
         if(self.commandConnected == True):
             print("Cannot connect to more than one server")
             return
@@ -69,6 +84,36 @@ class Client():
         self.controlSocket.send(str(command).encode('ascii'))
 
     """
+    " @Summary Send a search request to the file server
+    " @param keyword Keyword to use for search
+    """
+    def Search(self, keyword):
+        self.sendCommand("SEARCH " + keyword + " " + str(self.dataPort))
+        files = bytes(self.GetData(self.dataPort)).decode('ascii')
+        print("Search results:\n")
+        print(files)
+        self.CloseDataConnection()
+
+    """
+    " @Summary Creates a new client to get the requested file from a peer
+    " @param host ip of file's host
+    " @param port port to get file over
+    " @param filename name of requested file
+    """
+    def Get(self, filename, host, port):
+        try:
+            # start a new client
+            tmpClient = Client(self.myIP, False)
+            # connect to the client-server
+            tmpClient.connectToServer(host, port)
+            # call its RetrieveFile command
+            tmpClient.RetreiveFile(filename)
+            # close the client
+            tmpClient.Quit()
+        except:
+            print("Could not get file \"" + filename + "\" from host \"" + host + "\" on port " + port)
+
+    """
     " @summary Ask the fileserver for a file by name. Opens a seperate data connection to receive the file on.
     " @param filename 
     """
@@ -81,35 +126,46 @@ class Client():
         file.close()
 
     """
-    " @summary Run the store file command. Loads a file from disk as bytes and sends it to the file server over a new data connection.
-    " @param name of the file in ./LocalStorage
-    """
-    def StoreFile(self, filename):
-        self.sendCommand("STOR " + filename + " " + str(self.dataPort))
-        try:
-            file = open('./LocalStorage/' + filename, 'rb')
-            newChar = file.read(1)
-            data = bytes(''.encode('ascii'))
-            while newChar:
-                data = data + newChar
-                newChar = file.read(Client.buffer_size)
-                if not newChar:
-                    break
-            self.ConnectAndSendData(self.fileServerIP, data)
-            file.close()
-        except:
-            print("Error occurred while sending file to server")
-
-
-    """
     " @summary Print a list of the files stored on the file server
     """
     def ListFiles(self):
         self.sendCommand("LIST " + str(self.dataPort))
         files = bytes(self.GetData(self.dataPort)).decode('ascii')
-        print("Files stored on server are: ")
+        print("Available Files:\n")
         print(files)
         self.CloseDataConnection()
+
+    """
+    " @summary Print a list of the files stored on the file server
+    """
+    def Register(self, name, speed):
+        self.sendCommand("REG " + str(name) + " " + str(speed) + " " + str(self.dataPort))
+        confirm = bytes(self.GetData(self.dataPort)).decode('ascii')
+        print(confirm)
+        self.CloseDataConnection()
+
+    """
+    " @summary Add a file description to the server
+    " @param file Name of the stored file
+    " @param description A description of the file used for keyword searches
+    " @param speed The type of connection or the upload speed of it
+    """
+    def AddFile(self, file, description):
+        try:
+            # Use the data port number for the client's server port. There will be no problems because the client's ip and port will be different from the ControlServer's
+            descriptor = ""
+            for word in description:
+                descriptor = descriptor + " " + word
+
+            command = "ADD " + file + " " + str(self.myServerPort) + " " + str(self.dataPort) + descriptor
+            self.sendCommand(command)
+            confirmation = bytes(self.GetData(self.dataPort)).decode('ascii')
+            print(confirmation)
+        except:
+            print(f'could not add file {file}')
+
+        self.CloseDataConnection()
+
 
     """
     " @summary Send a quit message to the fileserver, and closes this client.
@@ -117,7 +173,13 @@ class Client():
     def Quit(self):
         if(self.commandConnected == True):
             self.sendCommand("quit")
-        self.__del__()
+            self.controlSocket.close()
+            self.commandConnected = False
+        self.CloseDataConnection()
+        if self.serverRunning:
+            self.serverRunning = False
+            self.myServer.closeControlServer()
+            self.myServer.__del__()
 
     """
     " @summary Create the data socket as the server and wait for a connection from the fileserver.
@@ -125,7 +187,7 @@ class Client():
     def CreateDataSocketServer(self):
         self.dataSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.dataSocket.settimeout(self.timeout)
-        self.dataSocket.bind((str(self.ip), int(self.dataPort)))
+        self.dataSocket.bind((str(self.myIP), int(self.dataPort)))
         self.dataSocket.listen()
         self.dataConnection, addr = self.dataSocket.accept()
         self.dataConnectionOpen = True
@@ -176,6 +238,4 @@ class Client():
     " @summary Close the control and data sockets.
     """
     def __del__(self):
-        if(self.commandConnected == True):
-            self.controlSocket.close()
-        self.CloseDataConnection()
+        self.Quit()

@@ -1,11 +1,10 @@
 import socket
-import concurrent.futures
-import os
-import time
+import FileRefList
 
 class Controller():
     buffer_size = 4096
-
+    FileRefs = FileRefList.FileRefs()  # The list of all files and their hosts declared as a static class property
+    Users = {} # Username, (host, speed)
     """
     " @summary
     " @param
@@ -20,11 +19,26 @@ class Controller():
         self.Run = True
         self.dataConnectionOpen = False
         self.dataSeverOpen = False
+        self.registered = False
+        self.clientSpeed = ""
+        self.clientUserName = ""
+
+    def SetupUser(self, name, speed, confirmPort):
+        if not (name in Controller.Users):
+            self.clientUserName = name
+            self.clientSpeed = speed
+            Controller.Users[name] = (str(self.ip), str(speed))
+            self.registered = True
+            self.SendData(("User is registered").encode('ascii'), confirmPort)
+            pass
+        else:
+            self.SendData(("User name is taken").encode('ascii'), confirmPort)
 
     """
     " @summary Receive messages from the client and send them to the message handler on a separate thread.
     """
     def RunControlServer(self):
+
         while(self.Run == True):
             try:
                 message = self.controlCon.recv(Controller.buffer_size).decode('ascii')  # we assume that
@@ -34,71 +48,118 @@ class Controller():
                 self.Quit()
 
     """
-    " @summary Handle all expected commands from the client (List, retr, stor, and quit)
+    " @summary Handle all expected commands from the client
     " @param message The full message received from the client as a string
     """
     def HandleMessage(self, message):
         try:
             command = str(message).split()
-            if command[0].lower() == "list":
-                self.List(command[1])
-                pass
-            elif command[0].lower() == "retr":
-                self.Retreive(command[1], command[2])
-                pass
-            elif command[0].lower() == "stor":
-                self.StoreFile(command[1], command[2])
+            if len(command) == 0: return
+            print(f'user: {self.clientUserName} - {command}')
+            if command[0].lower() == "reg":
+                self.SetupUser(command[1], command[2], command[3])
+                return
+
+            elif command[0].lower() == "list":
+                if self.registered is False:
+                    self.NotRegistered(command[1])
+                    pass
+                else:
+                    self.List(command[1])
                 pass
             elif command[0].lower() == "quit":
-                self.__del__()
-            pass
-        except:
-            print("Client sent bad request that could not be responded to on the data port")
+                if self.registered is False:
+                    print("User left before registering")
+                    pass
+                else:
+                    self.Quit()
+                    pass
+            elif command[0].lower() == "add":
+                if self.registered is False:
+                    self.NotRegistered(command[3])
+                    pass
+                else:
+                    self.AddFile(command)
+                    pass
+            elif command[0].lower() == "search":
+                if self.registered is False:
+                    self.NotRegistered(command[2])
+                    pass
+                else:
+                    print("returning info search with keyword " + command[1])
+                    self.Search(command[1], command[2])
+                    pass
+            else:
+                print("Command not supported")
+                pass
+        except ConnectionRefusedError as e:
+            print("Connection over data port was refused. Cannot communicate, closing connection")
+            self.Quit()
+        except Exception as e:
+            print(e)
+            print("Client sent bad request that could not be responded to on the data port.")
 
+    """
+    " @Summary If a user gives a command without registering, tell them so
+    " @param dataPort the port to return on
+    """
+    def NotRegistered(self, dataPort):
+        print("User is not registered")
+        self.SendData("User not registered".encode('ascii'), dataPort)
+
+    """
+    " @summary Add a file to the list of file references
+    " @param command The command recevied from the client
+    "        fileName, hostName, file port, speed, confirmation port, description
+    """
+    def AddFile(self, command):
+        fileName = command[1]
+        hostName = self.ip
+        portNum = command[2]
+        speed = self.clientSpeed
+        confirmPort = command[3]
+        description = command[4:]
+
+        descriptor = ""
+        for word in description:
+            descriptor = descriptor + " " + word
+
+        fileTup = (fileName, hostName, portNum, speed, self.clientUserName)
+
+        print("adding file " + descriptor)
+        Controller.FileRefs.add(descriptor, fileTup)  # Add to the list of all files registered
+
+        self.SendData(("file added").encode('ascii'), confirmPort)
+
+    """
+    " @summary Send information about a host through the data port
+    " @param hostInfo The name and data port of the host server as a HostInfo object
+    " @param dataPort The port to send the host info on 
+    """
+    def Search(self, keyword, dataPort):
+        hostInfo = Controller.FileRefs.search(keyword)
+        if len(hostInfo) == 0:
+            hostInfo.append(FileRefList.HostInfo("", "", "", "", ""))
+        message = ""
+        for host in hostInfo:
+            message = host.Speed + ", " + host.HostName + "/" + str(host.PortNum) + ", " + host.FileName + " " + "\n"
+        self.SendData(message.encode('ascii'), dataPort)
 
     """
     " @summary Handle the client command to return a directory list of the FileServer
     " @param dataPort The name of the port to send the list over
     """
     def List(self, dataPort):
-        arr = os.listdir('./FileServer')
-        message = ""
-        for file in arr:
-            message = message + file + '\n'
-        self.SendData((message).encode('ascii'), dataPort)
-
-    """
-    " @summary Handle the client command to return a file
-    " @param filename The name of the file to send the client
-    " @param dataPort The name of the port to send the file over
-    """
-    def Retreive(self, filename, dataPort):
         try:
-            file = open('./FileServer/'+filename, 'rb')
-            newChar = file.read(1)
-            data = bytes(''.encode('ascii'))
-            while newChar:
-                data = data + newChar
-                newChar = file.read(Controller.buffer_size)
-                if not newChar:
-                    break
-            self.SendData(data, dataPort)
-            file.close()
+            list = Controller.FileRefs.list()
+            message = ""
+            if len(list) > 0:
+                for entry in list:
+                    message = message + entry[0] + ", " + entry[1] + ", " + entry[2] + " " + entry[3] + "\n"
+            self.SendData((message).encode('ascii'), dataPort)
         except:
-                print("Client sent bad request")
-                self.SendBlankData(dataPort)
-
-    """
-    " @summary Handle the client command to store a file.
-    " @param filename The name of the expected file
-    " @param dataPort The port the file will be received over
-    """
-    def StoreFile(self, filename, dataPort):
-        bytes = self.GetData(dataPort)
-        print("got file")
-        file = open('./FileServer/' + filename, 'wb')
-        file.write(bytes)
-        file.close()
+            print("error getting file list")
+            self.SendBlankData(dataPort)
 
     """
     " @summary Send data to the client
@@ -166,10 +227,19 @@ class Controller():
     """
     def Quit(self):
         self.Run = False
+        self.dataConnectionOpen = False
+        self.dataSeverOpen = False
+        self.registered = False
         self.CloseDataConnection()
 
+        Controller.FileRefs.remove(self.clientUserName)
+        try:
+            Controller.Users.pop(self.clientUserName)
+        except:
+            pass  # for cases where user closes and server is forced closed but server wasn't deconstructed yet
+
     """
-    " @summary Safel delete using the Quit method
+    " @summary Safely delete using the Quit method
     """
     def __del__(self):
         self.Quit()

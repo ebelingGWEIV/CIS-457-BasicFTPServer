@@ -42,7 +42,7 @@ class Controller():
             if len(command) == 0: return
             print(f'received: {command} from {self.ip}')
             if command[0].lower() == "get":
-                self.controlCon.sendall(('HTTP/1.0 200 OK\n\nHello World').encode('ascii'))
+                self.GetRequest(command[1])
                 pass
             elif command[0].lower() == "post":
                 print("not required")
@@ -55,6 +55,26 @@ class Controller():
             self.Quit()
         except Exception as e:
             print(e)
+
+    """
+    " Build and send the response to a get request
+    " @param path The path to a file
+    """
+    def GetRequest(self, path):
+        try:
+            fin = open('WebDir' + path)
+            content = fin.read()
+            fin.close()
+            message = 'HTTP/1.0 200 OK\n\n'+ content
+            self.SendData(message.encode('ascii'))
+        except FileNotFoundError as ex:
+            print("Client requested " + path + " but it was not found") # This is a good place to use the cookie
+            self.Send404()
+        pass
+
+    def Send404(self):
+        content = 'HTTP/1.0 404 NOT FOUND\n\nFile Not Found'.encode('ascii')
+        self.SendData(content)
 
     """
     " @summary Send data to the client

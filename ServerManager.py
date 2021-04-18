@@ -24,9 +24,9 @@ class FileServer(object):
     def Start(self, server, port):
         try:
             # The file server needs a directory to manage
-            if not os.path.isdir("./FileServer"):
-                print("Creating FileServer directory")
-                os.mkdir("./FileServer")
+            if not os.path.isdir("WebDir"):
+                print("Creating WebDir directory")
+                os.mkdir("WebDir")
             # Create and listen to the welcome socket the server will use
             welcomeSocket = self.Create(server, port)
             self.ListenForConnections(welcomeSocket)

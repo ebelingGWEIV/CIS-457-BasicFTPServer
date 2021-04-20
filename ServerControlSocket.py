@@ -42,7 +42,8 @@ class Controller():
             if len(command) == 0: return
             print(f'received: {command} from {self.ip}')
             if command[0].lower() == "get":
-                self.GetRequest(command[1])
+                cookie = self.FindCookie(command)
+                self.GetRequest(command[1], cookie)
                 pass
             elif command[0].lower() == "post":
                 print("not required")
@@ -60,21 +61,66 @@ class Controller():
     " Build and send the response to a get request
     " @param path The path to a file
     """
-    def GetRequest(self, path):
+    def GetRequest(self, path, cookie):
+        if path == '/':
+            path = '/home.html'
+        elif path[1] == '%': #This is for responding to the CSS request
+            path = path.split('\'')
+            path = '/' + path[3] #the name of the css requested, hopefully
         try:
             fin = open('WebDir' + path)
             content = fin.read()
             fin.close()
-            message = 'HTTP/1.0 200 OK\n\n'+ content
+
+
+
+            message = 'HTTP/1.0 200 OK/\n'
+
+
+            Cookie, count = self.CookieHeader(cookie)
+            message = message + Cookie + '\n\n' + content + str(count) + "</p></body></html>"
             self.SendData(message.encode('ascii'))
         except FileNotFoundError as ex:
             print("Client requested " + path + " but it was not found") # This is a good place to use the cookie
             self.Send404()
         pass
 
+    """
+    " Reply to the client with a 404 code
+    """
     def Send404(self):
         content = 'HTTP/1.0 404 NOT FOUND\n\nFile Not Found'.encode('ascii')
         self.SendData(content)
+
+    """
+    " Only supports one cookie
+    " @param requestArgs the split list of the message recieved from the client
+    """
+    def FindCookie(self, requestArgs):
+        foundCookie = False
+        for arg in requestArgs:
+            myStr = str(arg)
+            if(foundCookie == True):
+                if(myStr == 'Cache-Control:'):  # If we find this, then the cookie we couldn't find the cookie we were looking for
+                    foundCookie = False
+                    return ''
+                else:
+                    cookieParts = myStr.split('=')
+                    if(cookieParts[0] == 'access_count'): # We finally found the cookie
+                        return myStr
+            elif(myStr == 'Cookie:'):
+                foundCookie = True
+        return ''
+
+    def CookieHeader(self, cookie):
+        if len(cookie) == 0:
+            newCookie = 'Set-Cookie: access_count=0'
+            count = 0
+        else:
+            newCookie = cookie.split('=')
+            count = str(int(newCookie[1][:len(newCookie[1])-1]) + 1)
+            newCookie = 'Set-Cookie: access_count=' + count
+        return (newCookie + ';Date: Tue, 20 Apr 2021 13:37:17 GMT; Expires=Tue, 4 May 2021 02:00:00 GMT/', count)
 
     """
     " @summary Send data to the client

@@ -76,9 +76,14 @@ class Controller():
             message = 'HTTP/1.0 200 OK/\n'
 
             isPageRequest = path[-5:] == '.html' # a bool that marks if the request was for the page or css
-            Cookie, count = self.CookieHeader(cookie, isPageRequest)
+            Cookie, count = self.AccessCookieHeader(cookie, isPageRequest)
 
-            message = message + Cookie + '\n\n' + content + str(count) + "</p></body></html>"
+            if path == "/home.html":
+                # This is so that other pages can be loaded without html being injected into the page.
+                # A better solution would be to have a keyword that can be looked for in the html and then replaced.
+                message = message + Cookie + '\n\n' + content + str(count) + "</p></body></html>"
+            else:
+                message = message + cookie + '\n\n' + content
 
             self.SendData(message.encode('ascii'))
         except FileNotFoundError as ex:
@@ -113,7 +118,10 @@ class Controller():
                 foundCookie = True
         return ''
 
-    def CookieHeader(self, cookie, incrementCount):
+    """
+    " Create a cookie for counting the number of times a user has accessed/loaded a page from this server
+    """
+    def AccessCookieHeader(self, cookie, incrementCount):
         if len(cookie) == 0:
             newCookie = 'Set-Cookie: access_count=0'
             count = 0

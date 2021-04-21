@@ -62,6 +62,7 @@ class Controller():
     " @param path The path to a file
     """
     def GetRequest(self, path, cookie):
+        count = 0
         if path == '/':
             path = '/home.html'
         elif path[1] == '%': #This is for responding to the CSS request
@@ -72,13 +73,13 @@ class Controller():
             content = fin.read()
             fin.close()
 
-
-
             message = 'HTTP/1.0 200 OK/\n'
 
+            isPageRequest = path[-5:] == '.html' # a bool that marks if the request was for the page or css
+            Cookie, count = self.CookieHeader(cookie, isPageRequest)
 
-            Cookie, count = self.CookieHeader(cookie)
             message = message + Cookie + '\n\n' + content + str(count) + "</p></body></html>"
+
             self.SendData(message.encode('ascii'))
         except FileNotFoundError as ex:
             print("Client requested " + path + " but it was not found") # This is a good place to use the cookie
@@ -112,19 +113,20 @@ class Controller():
                 foundCookie = True
         return ''
 
-    def CookieHeader(self, cookie):
+    def CookieHeader(self, cookie, incrementCount):
         if len(cookie) == 0:
             newCookie = 'Set-Cookie: access_count=0'
             count = 0
         else:
             newCookie = cookie.split('=')
-            count = str(int(newCookie[1][:len(newCookie[1])-1]) + 1)
-            newCookie = 'Set-Cookie: access_count=' + count
+            count = (int(newCookie[1][:-1]))
+            if incrementCount: count = count + 1
+            newCookie = 'Set-Cookie: access_count=' + str(count)
         return (newCookie + ';Date: Tue, 20 Apr 2021 13:37:17 GMT; Expires=Tue, 4 May 2021 02:00:00 GMT/', count)
 
     """
     " @summary Send data to the client
-    " @param message The pre-constructed 'message' to send
+    " @param message The pre-constructed 'messagae' to send
     " @param dataPort The port to send data over
     """
     def SendData(self, message):

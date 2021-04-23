@@ -69,9 +69,7 @@ class Controller():
             path = path.split('\'')
             path = '/' + path[3] #the name of the css requested, hopefully
         try:
-            fin = open('WebDir' + path)
-            content = fin.read()
-            fin.close()
+            content = self.GetFile(path)
 
             message = 'HTTP/1.0 200 OK/\n'
 
@@ -92,11 +90,23 @@ class Controller():
         pass
 
     """
+    " Get the contents of a file
+    " @param path The path to the file in the WebDir proceeded with a /
+    """
+    def GetFile(self, path):
+        fin = open('WebDir' + path)
+        content = fin.read()
+        fin.close()
+        return content
+
+    """
     " Reply to the client with a 404 code
+    " Note: Does not increment the access counter. This is because the counter is intended to count successful page loading attempts.
     """
     def Send404(self):
-        content = 'HTTP/1.0 404 NOT FOUND\n\nFile Not Found'.encode('ascii')
-        self.SendData(content)
+        content = self.GetFile('/notFound.html')
+        message = ('HTTP/1.0 404 NOT FOUND\n\n' + content).encode('ascii')
+        self.SendData(message)
 
     """
     " Only supports one cookie
